@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('microgreens-auth-token')?.value || 
-                request.headers.get('authorization')?.replace('Bearer ', '') ||
-                // Como usamos localStorage, también checkeamos el header personalizado
-                request.headers.get('x-auth-token');
-
+  // Solo checkeamos cookies ya que el middleware se ejecuta en el servidor
+  const token = request.cookies.get('microgreens-auth-token')?.value;
   const { pathname } = request.nextUrl;
 
   // Rutas públicas que no requieren autenticación
@@ -37,7 +34,7 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api (API routes)
-     * - _next/static (static files)
+     * - _next/static (static files)  
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public (public files)

@@ -61,10 +61,12 @@ export const mockAuth = {
 
 // Utilidades de storage
 export const authStorage = {
-  // Guardar token
+  // Guardar token (localStorage + cookie)
   setToken(token: string): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem(TOKEN_KEY, token);
+      // También guardar en cookie para que el middleware pueda leerlo
+      document.cookie = `microgreens-auth-token=${token}; path=/; max-age=${7 * 24 * 60 * 60}`; // 7 días
     }
   },
 
@@ -76,11 +78,13 @@ export const authStorage = {
     return null;
   },
 
-  // Remover token
+  // Remover token (localStorage + cookie)
   removeToken(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      // También remover cookie
+      document.cookie = 'microgreens-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
     }
   },
 
