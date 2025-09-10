@@ -28,11 +28,20 @@ export default function LoginForm() {
     }
   };
 
-  const handleDemoLogin = () => {
-    setCredentials({
+  const handleDemoLogin = async () => {
+    const demoCredentials = {
       email: 'admin@microgreens.com',
       password: 'admin123'
-    });
+    };
+    
+    setCredentials(demoCredentials);
+    setError('');
+    
+    try {
+      await login(demoCredentials);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
+    }
   };
 
   return (

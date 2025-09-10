@@ -60,6 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Actualizar estado
       setUser(authenticatedUser);
       
+      // Pequeña pausa para asegurar que las cookies se guarden
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Redirigir al dashboard
       router.push('/dashboard');
     } catch (error) {

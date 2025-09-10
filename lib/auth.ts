@@ -66,7 +66,7 @@ export const authStorage = {
     if (typeof window !== 'undefined') {
       localStorage.setItem(TOKEN_KEY, token);
       // También guardar en cookie para que el middleware pueda leerlo
-      document.cookie = `microgreens-auth-token=${token}; path=/; max-age=${7 * 24 * 60 * 60}`; // 7 días
+      document.cookie = `microgreens-auth-token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=lax`; // 7 días
     }
   },
 
