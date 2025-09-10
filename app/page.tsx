@@ -1,73 +1,102 @@
-import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+'use client';
+
+import { useAuth } from '@/providers/AuthProvider';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Leaf } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Home() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null; // Will redirect to dashboard
+  }
+
   return (
-    <div className="space-y-12">
-      <section className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Bienvenidos a MicroVerde</h1>
-        <p className="text-xl mb-6">Descubre el poder nutritivo de los microgreens</p>
-        <Button asChild>
-          <Link href="/productos">Ver Nuestros Productos</Link>
-        </Button>
-      </section>
-
-      <section className="grid md:grid-cols-3 gap-8">
-        <div className="text-center">
-          <Image
-            src="/placeholder.svg?height=200&width=200"
-            alt="Frescura"
-            width={200}
-            height={200}
-            className="mx-auto mb-4"
-          />
-          <h3 className="text-xl font-semibold mb-2">Frescura Garantizada</h3>
-          <p>Nuestros microgreens son cosechados diariamente para asegurar la máxima frescura.</p>
-        </div>
-        <div className="text-center">
-          <Image
-            src="/placeholder.svg?height=200&width=200"
-            alt="Nutrición"
-            width={200}
-            height={200}
-            className="mx-auto mb-4"
-          />
-          <h3 className="text-xl font-semibold mb-2">Alta Nutrición</h3>
-          <p>Ricos en vitaminas, minerales y antioxidantes para una dieta saludable.</p>
-        </div>
-        <div className="text-center">
-          <Image
-            src="/placeholder.svg?height=200&width=200"
-            alt="Sostenibilidad"
-            width={200}
-            height={200}
-            className="mx-auto mb-4"
-          />
-          <h3 className="text-xl font-semibold mb-2">Cultivo Sostenible</h3>
-          <p>Utilizamos métodos de cultivo ecológicos y sostenibles.</p>
-        </div>
-      </section>
-
-      <section className="bg-green-100 p-8 rounded-lg">
-        <h2 className="text-2xl font-bold mb-4 text-center">Nuestros Productos Destacados</h2>
-        <div className="grid md:grid-cols-4 gap-6">
-          {["Brócoli", "Rábano", "Girasol", "Guisante"].map((product) => (
-            <div key={product} className="bg-white p-4 rounded shadow">
-              <Image
-                src="/placeholder.svg?height=150&width=150"
-                alt={product}
-                width={150}
-                height={150}
-                className="mx-auto mb-2"
-              />
-              <h4 className="text-lg font-semibold mb-1">{product}</h4>
-              <p className="text-sm text-gray-600">Microgreens de {product.toLowerCase()}</p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center space-y-8">
+          {/* Logo y título */}
+          <div className="flex justify-center mb-8">
+            <div className="p-4 bg-green-500 rounded-full">
+              <Leaf className="h-12 w-12 text-white" />
             </div>
-          ))}
+          </div>
+          
+          <div className="space-y-4">
+            <h1 className="text-5xl font-bold text-green-800">
+              MicroGreens
+            </h1>
+            <p className="text-xl text-green-600 max-w-2xl mx-auto">
+              Sistema de gestión completo para tu producción de microgreens. 
+              Registra siembras, controla cosechas y analiza tu rendimiento.
+            </p>
+          </div>
+
+          {/* CTA */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button asChild size="lg" className="bg-green-600 hover:bg-green-700">
+              <Link href="/login">
+                Iniciar Sesión
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/login">
+                Ver Demo
+              </Link>
+            </Button>
+          </div>
+
+          {/* Features */}
+          <div className="grid md:grid-cols-3 gap-8 mt-16">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Leaf className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Gestión de Siembras</h3>
+              <p className="text-gray-600">
+                Registra y monitorea todas tus siembras con fechas, ubicaciones y estados.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Leaf className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Control de Cosechas</h3>
+              <p className="text-gray-600">
+                Registra pesos, calidad y notas de cada cosecha para optimizar tu producción.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Leaf className="h-6 w-6 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Estadísticas</h3>
+              <p className="text-gray-600">
+                Analiza tu rendimiento con gráficos y métricas que te ayudan a mejorar.
+              </p>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
     </div>
-  )
+  );
 }
 
