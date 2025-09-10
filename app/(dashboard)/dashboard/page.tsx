@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -7,41 +8,70 @@ import {
   Scissors, 
   TrendingUp, 
   Calendar,
-  Plus
+  Plus,
+  Scale,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSiembras } from '@/hooks/useSiembras';
+import { useCosechas } from '@/hooks/useCosechas';
+import { MICROGREEN_LABELS, ESTADO_LABELS, ESTADO_COLORS } from '@/lib/constants';
 import Link from 'next/link';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export default function DashboardPage() {
-  // Datos mock para el dashboard
+  // Usar hooks para datos reales
+  const { siembras, getStats: getSiembrasStats, getUpcomingHarvests } = useSiembras();
+  const { cosechas, getStats: getCosechasStats } = useCosechas();
+  
+  const [dashboardData, setDashboardData] = useState({
+    siembrasStats: { sembradas: 0, creciendo: 0, listas: 0, cosechadas: 0 },
+    cosechasStats: { total: 0, pesoTotal: 0, cosechasEsteMes: 0, calidadPromedio: 0 },
+    proximasCosechas: []
+  });
+
+  // Actualizar datos del dashboard cuando cambien siembras o cosechas
+  useEffect(() => {
+    const siembrasStats = getSiembrasStats();
+    const cosechasStats = getCosechasStats();
+    const proximasCosechas = getUpcomingHarvests(3);
+
+    setDashboardData({
+      siembrasStats,
+      cosechasStats,
+      proximasCosechas
+    });
+  }, [siembras, cosechas, getSiembrasStats, getCosechasStats, getUpcomingHarvests]);
+
   const stats = [
     {
       title: 'Siembras Activas',
-      value: '24',
-      description: 'Creciendo actualmente',
+      value: (dashboardData.siembrasStats.sembradas + dashboardData.siembrasStats.creciendo).toString(),
+      description: 'Sembradas + Creciendo',
       icon: Sprout,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
     },
     {
       title: 'Cosechas del Mes',
-      value: '18',
+      value: dashboardData.cosechasStats.cosechasEsteMes.toString(),
       description: 'Total este mes',
       icon: Scissors,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
     },
     {
-      title: 'Rendimiento Promedio',
-      value: '85g',
-      description: 'Por bandeja',
-      icon: TrendingUp,
+      title: 'Peso Total Cosechado',
+      value: `${dashboardData.cosechasStats.pesoTotal}g`,
+      description: 'Todas las cosechas',
+      icon: Scale,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
     },
     {
       title: 'Próximas Cosechas',
-      value: '6',
+      value: dashboardData.proximasCosechas.length.toString(),
       description: 'En los próximos 3 días',
       icon: Calendar,
       color: 'text-purple-600',
@@ -49,29 +79,50 @@ export default function DashboardPage() {
     },
   ];
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'siembra',
-      description: 'Nueva siembra de brócoli en bandeja A1',
-      time: 'Hace 2 horas',
-      status: 'sembrado'
-    },
-    {
-      id: 2,
-      type: 'cosecha',
-      description: 'Cosecha de rábano - 95g obtenidos',
-      time: 'Hace 4 horas',
-      status: 'cosechado'
-    },
-    {
-      id: 3,
-      type: 'siembra',
-      description: 'Siembra de girasol lista para cosechar',
-      time: 'Hace 6 horas',
-      status: 'listo'
-    },
-  ];
+  // Generar actividad reciente real basada en datos
+  const getRecentActivity = () => {
+    const activities = [];
+
+    // Agregar siembras recientes (últimas 3)
+    const siembrasRecientes = [...siembras]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 2);
+
+    siembrasRecientes.forEach((siembra, index) => {
+      activities.push({
+        id: `siembra-${siembra.id}`,
+        type: 'siembra',
+        description: `Nueva siembra de ${MICROGREEN_LABELS[siembra.tipo_microgreen]} en bandeja ${siembra.ubicacion_bandeja}`,
+        time: format(new Date(siembra.created_at), "dd/MM/yyyy 'a las' HH:mm", { locale: es }),
+        status: siembra.estado
+      });
+    });
+
+    // Agregar cosechas recientes (últimas 2)
+    const cosechasRecientes = [...cosechas]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 2);
+
+    cosechasRecientes.forEach(cosecha => {
+      const siembraRelacionada = siembras.find(s => s.id === cosecha.siembra_id);
+      const tipoMicrogreen = siembraRelacionada ? MICROGREEN_LABELS[siembraRelacionada.tipo_microgreen] : 'microgreen';
+      
+      activities.push({
+        id: `cosecha-${cosecha.id}`,
+        type: 'cosecha',
+        description: `Cosecha de ${tipoMicrogreen} - ${cosecha.peso_cosechado}g obtenidos`,
+        time: format(new Date(cosecha.created_at), "dd/MM/yyyy 'a las' HH:mm", { locale: es }),
+        status: 'cosechado'
+      });
+    });
+
+    // Ordenar por fecha más reciente y limitar a 4
+    return activities
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+      .slice(0, 4);
+  };
+
+  const recentActivity = getRecentActivity();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -104,8 +155,14 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex space-x-3">
+          <Button asChild variant="outline">
+            <Link href="/cosechas/nueva">
+              <Scissors className="mr-2 h-4 w-4" />
+              Nueva Cosecha
+            </Link>
+          </Button>
           <Button asChild>
-            <Link href="/siembras">
+            <Link href="/siembras/nueva">
               <Plus className="mr-2 h-4 w-4" />
               Nueva Siembra
             </Link>
@@ -201,16 +258,24 @@ export default function DashboardPage() {
             </Button>
             <Button asChild className="w-full justify-start" variant="outline">
               <Link href="/siembras">
-                <Calendar className="mr-3 h-4 w-4" />
-                Ver Siembras Activas
+                <Sprout className="mr-3 h-4 w-4 text-blue-600" />
+                Ver Siembras
               </Link>
             </Button>
             <Button asChild className="w-full justify-start" variant="outline">
-              <Link href="/estadisticas">
-                <TrendingUp className="mr-3 h-4 w-4" />
-                Ver Estadísticas
+              <Link href="/cosechas">
+                <Scale className="mr-3 h-4 w-4 text-green-600" />
+                Ver Cosechas
               </Link>
             </Button>
+            {dashboardData.proximasCosechas.length > 0 && (
+              <Button asChild className="w-full justify-start bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100">
+                <Link href="/siembras">
+                  <Calendar className="mr-3 h-4 w-4" />
+                  {dashboardData.proximasCosechas.length} Próximas Cosechas
+                </Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
