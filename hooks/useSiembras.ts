@@ -2,9 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Siembra, SiembraFormData } from '@/lib/types';
-import { TIEMPOS_CRECIMIENTO } from '@/lib/constants';
+import { apiClient, isApiError, getErrorMessage } from '@/lib/api';
+import { 
+  backendToFrontendSiembra, 
+  frontendToBackendPlanting, 
+  updateBackendPlanting,
+  convertPlantingsToSiembras 
+} from '@/lib/adapters/plantingAdapter';
 
-// Mock data - En una aplicación real esto vendría de una API
+// Mock data como fallback
 const MOCK_SIEMBRAS: Siembra[] = [
   {
     id: '1',
@@ -29,45 +35,11 @@ const MOCK_SIEMBRAS: Siembra[] = [
     created_at: '2025-01-07T14:30:00Z',
     updated_at: '2025-01-07T14:30:00Z',
   },
-  {
-    id: '3',
-    tipo_microgreen: 'girasol',
-    fecha_siembra: '2025-01-08',
-    cantidad_sembrada: 60,
-    ubicacion_bandeja: 'B1',
-    fecha_esperada_cosecha: '2025-01-16',
-    estado: 'sembrado',
-    notas: 'Semillas de alta calidad',
-    created_at: '2025-01-08T09:15:00Z',
-    updated_at: '2025-01-08T09:15:00Z',
-  },
-  {
-    id: '4',
-    tipo_microgreen: 'rúcula',
-    fecha_siembra: '2024-12-28',
-    cantidad_sembrada: 45,
-    ubicacion_bandeja: 'A3',
-    fecha_esperada_cosecha: '2025-01-04',
-    fecha_real_cosecha: '2025-01-04',
-    estado: 'cosechado',
-    created_at: '2024-12-28T11:20:00Z',
-    updated_at: '2025-01-04T16:45:00Z',
-  },
-  {
-    id: '5',
-    tipo_microgreen: 'guisante',
-    fecha_siembra: '2025-01-06',
-    cantidad_sembrada: 35,
-    ubicacion_bandeja: 'B2',
-    fecha_esperada_cosecha: '2025-01-12',
-    estado: 'creciendo',
-    created_at: '2025-01-06T16:20:00Z',
-    updated_at: '2025-01-06T16:20:00Z',
-  },
 ];
 
 interface UseSiembrasOptions {
   autoload?: boolean;
+  useMockData?: boolean; // Nueva opción para forzar mock data
   filters?: {
     estado?: string;
     tipo?: string;
@@ -75,14 +47,15 @@ interface UseSiembrasOptions {
 }
 
 export function useSiembras(options: UseSiembrasOptions = {}) {
-  const { autoload = true, filters } = options;
+  const { autoload = true, useMockData = false, filters } = options;
   
   const [siembras, setSiembras] = useState<Siembra[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
 
-  // Simular llamada a API para obtener siembras
-  const fetchSiembras = useCallback(async () => {
+  // Función para usar mock data
+  const useMockFallback = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -103,13 +76,58 @@ export function useSiembras(options: UseSiembrasOptions = {}) {
       }
       
       setSiembras(result);
+      setIsConnected(false);
     } catch (err) {
-      setError('Error al cargar las siembras');
-      console.error('Error fetching siembras:', err);
+      setError('Error al cargar las siembras (modo offline)');
+      console.error('Error with mock data:', err);
     } finally {
       setIsLoading(false);
     }
   }, [filters]);
+
+  // Función para usar API real
+  const fetchSiembrasFromAPI = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Intentar obtener todas las siembras (paginación simple por ahora)
+      const response = await apiClient.getPlantings(1, 100, '');
+      
+      // Convertir plantings del backend a siembras del frontend
+      let siembrasFromAPI = convertPlantingsToSiembras(response.data);
+      
+      // Aplicar filtros si existen
+      if (filters) {
+        if (filters.estado && filters.estado !== 'all') {
+          siembrasFromAPI = siembrasFromAPI.filter(s => s.estado === filters.estado);
+        }
+        if (filters.tipo && filters.tipo !== 'all') {
+          siembrasFromAPI = siembrasFromAPI.filter(s => s.tipo_microgreen === filters.tipo);
+        }
+      }
+      
+      setSiembras(siembrasFromAPI);
+      setIsConnected(true);
+    } catch (err) {
+      console.error('API error, falling back to mock data:', err);
+      setIsConnected(false);
+      
+      // Fallback a mock data si la API falla
+      await useMockFallback();
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters, useMockFallback]);
+
+  // Función principal de fetch que decide qué usar
+  const fetchSiembras = useCallback(async () => {
+    if (useMockData) {
+      await useMockFallback();
+    } else {
+      await fetchSiembrasFromAPI();
+    }
+  }, [useMockData, useMockFallback, fetchSiembrasFromAPI]);
 
   // Cargar siembras automáticamente al montar el componente
   useEffect(() => {
@@ -124,35 +142,41 @@ export function useSiembras(options: UseSiembrasOptions = {}) {
     setError(null);
     
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Calcular fecha esperada de cosecha
-      const fechaEsperada = new Date(data.fecha_siembra);
-      const diasCrecimiento = TIEMPOS_CRECIMIENTO[data.tipo_microgreen] || 7;
-      fechaEsperada.setDate(fechaEsperada.getDate() + diasCrecimiento);
-      
-      const newSiembra: Siembra = {
-        id: Date.now().toString(),
-        ...data,
-        fecha_esperada_cosecha: fechaEsperada.toISOString().split('T')[0],
-        estado: 'sembrado',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      
-      // Actualizar estado local
-      setSiembras(prev => [newSiembra, ...prev]);
-      
-      return newSiembra;
+      if (useMockData || !isConnected) {
+        // Modo mock/offline
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const newSiembra: Siembra = {
+          id: Date.now().toString(),
+          ...data,
+          fecha_esperada_cosecha: data.fecha_esperada_cosecha || 
+            new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          estado: 'sembrado',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        
+        setSiembras(prev => [newSiembra, ...prev]);
+        return newSiembra;
+      } else {
+        // Modo API real
+        // TODO: Obtener userId real cuando se implemente autenticación
+        const tempUserId = 'temp-user-id'; // Temporal hasta implementar auth
+        const backendData = frontendToBackendPlanting(data, tempUserId);
+        const response = await apiClient.createPlanting(backendData);
+        const newSiembra = backendToFrontendSiembra(response);
+        
+        setSiembras(prev => [newSiembra, ...prev]);
+        return newSiembra;
+      }
     } catch (err) {
-      const errorMessage = 'Error al crear la siembra';
+      const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [useMockData, isConnected]);
 
   // Actualizar siembra existente
   const updateSiembra = useCallback(async (id: string, data: Partial<SiembraFormData>): Promise<Siembra> => {
@@ -160,29 +184,49 @@ export function useSiembras(options: UseSiembrasOptions = {}) {
     setError(null);
     
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const updatedSiembra: Siembra = {
-        ...siembras.find(s => s.id === id)!,
-        ...data,
-        updated_at: new Date().toISOString(),
-      };
-      
-      // Actualizar estado local
-      setSiembras(prev => 
-        prev.map(s => s.id === id ? updatedSiembra : s)
-      );
-      
-      return updatedSiembra;
+      if (useMockData || !isConnected) {
+        // Modo mock/offline
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const updatedSiembra: Siembra = {
+          ...siembras.find(s => s.id === id)!,
+          ...data,
+          updated_at: new Date().toISOString(),
+        };
+        
+        setSiembras(prev => 
+          prev.map(s => s.id === id ? updatedSiembra : s)
+        );
+        
+        return updatedSiembra;
+      } else {
+        // Modo API real
+        const existingSiembra = siembras.find(s => s.id === id);
+        if (!existingSiembra) {
+          throw new Error('Siembra no encontrada');
+        }
+        
+        // Obtener el planting original del backend
+        const originalPlanting = await apiClient.getPlanting(id);
+        const backendUpdates = updateBackendPlanting(originalPlanting, data);
+        
+        const response = await apiClient.updatePlanting(id, backendUpdates);
+        const updatedSiembra = backendToFrontendSiembra(response);
+        
+        setSiembras(prev => 
+          prev.map(s => s.id === id ? updatedSiembra : s)
+        );
+        
+        return updatedSiembra;
+      }
     } catch (err) {
-      const errorMessage = 'Error al actualizar la siembra';
+      const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [siembras]);
+  }, [useMockData, isConnected, siembras]);
 
   // Eliminar siembra
   const deleteSiembra = useCallback(async (id: string): Promise<void> => {
@@ -190,19 +234,23 @@ export function useSiembras(options: UseSiembrasOptions = {}) {
     setError(null);
     
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Actualizar estado local
-      setSiembras(prev => prev.filter(s => s.id !== id));
+      if (useMockData || !isConnected) {
+        // Modo mock/offline
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setSiembras(prev => prev.filter(s => s.id !== id));
+      } else {
+        // Modo API real
+        await apiClient.deletePlanting(id);
+        setSiembras(prev => prev.filter(s => s.id !== id));
+      }
     } catch (err) {
-      const errorMessage = 'Error al eliminar la siembra';
+      const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [useMockData, isConnected]);
 
   // Obtener una siembra por ID
   const getSiembraById = useCallback((id: string): Siembra | undefined => {
@@ -210,14 +258,33 @@ export function useSiembras(options: UseSiembrasOptions = {}) {
   }, [siembras]);
 
   // Marcar siembra como cosechada
-  const markAsHarvested = useCallback(async (id: string, fechaCosecha?: string): Promise<Siembra> => {
-    const fechaReal = fechaCosecha || new Date().toISOString().split('T')[0];
+  const markAsHarvested = useCallback(async (id: string, peso: number, fechaCosecha?: string): Promise<Siembra> => {
+    const fecha = fechaCosecha || new Date().toISOString().split('T')[0];
     
-    return updateSiembra(id, {
-      estado: 'cosechado',
-      fecha_real_cosecha: fechaReal,
-    } as any);
-  }, [updateSiembra]);
+    if (useMockData || !isConnected) {
+      // Modo mock
+      return updateSiembra(id, {
+        estado: 'cosechado',
+        fecha_real_cosecha: fecha,
+        notas: `Cosechado: ${peso}g el ${fecha}`,
+      } as any);
+    } else {
+      // Modo API real - actualizar el yield en el backend
+      const backendUpdates = {
+        yield: peso,
+        notes: `Cosechado: ${peso}g el ${fecha}`,
+      };
+      
+      const response = await apiClient.updatePlanting(id, backendUpdates);
+      const updatedSiembra = backendToFrontendSiembra(response);
+      
+      setSiembras(prev => 
+        prev.map(s => s.id === id ? updatedSiembra : s)
+      );
+      
+      return updatedSiembra;
+    }
+  }, [useMockData, isConnected, updateSiembra]);
 
   // Obtener estadísticas básicas
   const getStats = useCallback(() => {
@@ -258,11 +325,24 @@ export function useSiembras(options: UseSiembrasOptions = {}) {
     return siembras.filter(s => s.estado === estado);
   }, [siembras]);
 
+  // Verificar conexión con backend
+  const checkConnection = useCallback(async () => {
+    try {
+      await apiClient.healthCheck();
+      setIsConnected(true);
+      return true;
+    } catch (error) {
+      setIsConnected(false);
+      return false;
+    }
+  }, []);
+
   return {
     // Estado
     siembras,
     isLoading,
     error,
+    isConnected,
     
     // Acciones CRUD
     fetchSiembras,
@@ -283,11 +363,14 @@ export function useSiembras(options: UseSiembrasOptions = {}) {
     // Control de estado
     setError,
     clearError: () => setError(null),
+    
+    // Control de conexión
+    checkConnection,
   };
 }
 
 // Hook específico para obtener una siembra individual
-export function useSiembra(id: string) {
+export function useSiembra(id: string, useMockData = false) {
   const [siembra, setSiembra] = useState<Siembra | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -298,19 +381,26 @@ export function useSiembra(id: string) {
       setError(null);
       
       try {
-        // Simular delay de API
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const foundSiembra = MOCK_SIEMBRAS.find(s => s.id === id);
-        
-        if (!foundSiembra) {
-          setError('Siembra no encontrada');
-          return;
+        if (useMockData) {
+          // Modo mock
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const foundSiembra = MOCK_SIEMBRAS.find(s => s.id === id);
+          
+          if (!foundSiembra) {
+            setError('Siembra no encontrada');
+            return;
+          }
+          
+          setSiembra(foundSiembra);
+        } else {
+          // Modo API real
+          const response = await apiClient.getPlanting(id);
+          const siembraFromAPI = backendToFrontendSiembra(response);
+          setSiembra(siembraFromAPI);
         }
-        
-        setSiembra(foundSiembra);
       } catch (err) {
-        setError('Error al cargar la siembra');
+        const errorMessage = getErrorMessage(err);
+        setError(errorMessage);
         console.error('Error fetching siembra:', err);
       } finally {
         setIsLoading(false);
@@ -320,7 +410,7 @@ export function useSiembra(id: string) {
     if (id) {
       fetchSiembra();
     }
-  }, [id]);
+  }, [id, useMockData]);
 
   return {
     siembra,
