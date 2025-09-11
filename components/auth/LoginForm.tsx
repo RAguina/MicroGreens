@@ -30,8 +30,8 @@ export default function LoginForm() {
 
   const handleDemoLogin = async () => {
     const demoCredentials = {
-      email: 'admin@microgreens.com',
-      password: 'admin123'
+      email: 'demo@microgreens.com',
+      password: 'demo123'
     };
     
     setCredentials(demoCredentials);

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, LoginCredentials } from '@/lib/types';
-import { mockAuth, authStorage } from '@/lib/auth';
+import { realAuth, authStorage, AuthError } from '@/lib/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -20,26 +20,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Verificar autenticación al cargar
+  // Verificar autenticación al cargar - usar backend real
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const token = authStorage.getToken();
-        const savedUser = authStorage.getUser();
+        // Intentar obtener usuario actual del backend (verifica cookie JWT)
+        const currentUser = await realAuth.getCurrentUser();
         
-        if (token && savedUser) {
-          // Verificar que el token siga siendo válido
-          const verifiedUser = await mockAuth.verifyToken(token);
-          if (verifiedUser) {
-            setUser(verifiedUser);
-          } else {
-            // Token inválido, limpiar storage
-            authStorage.removeToken();
-          }
+        if (currentUser) {
+          setUser(currentUser);
+          authStorage.setUser(currentUser); // Guardar en localStorage para UX
+        } else {
+          // No hay sesión activa, limpiar localStorage
+          authStorage.removeUser();
+          setUser(null);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-        authStorage.removeToken();
+        authStorage.removeUser();
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -49,53 +48,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
-    setIsLoading(true);
     try {
-      const { user: authenticatedUser, token } = await mockAuth.login(credentials);
+      setIsLoading(true);
       
-      // Guardar en storage
-      authStorage.setToken(token);
-      authStorage.setUser(authenticatedUser);
+      const { user: loggedInUser } = await realAuth.login(credentials);
       
-      // Actualizar estado
-      setUser(authenticatedUser);
+      // Actualizar estado local
+      setUser(loggedInUser);
+      authStorage.setUser(loggedInUser);
       
-      // Pequeña pausa para asegurar que las cookies se guarden
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Redirigir al dashboard
-      router.push('/dashboard');
     } catch (error) {
-      throw error; // Re-lanzar para que el componente de login pueda manejarlo
+      // Re-lanzar error para que el componente pueda manejarlo
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      throw new AuthError('Error inesperado durante el login');
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = async () => {
-    setIsLoading(true);
     try {
-      await mockAuth.logout();
+      setIsLoading(true);
       
-      // Limpiar storage y estado
-      authStorage.removeToken();
+      // Logout en el backend (borra cookie JWT)
+      await realAuth.logout();
+      
+      // Limpiar estado local
       setUser(null);
+      authStorage.removeUser();
       
-      // Redirigir al login
+      // Redirigir a login
       router.push('/login');
+      
     } catch (error) {
       console.error('Error during logout:', error);
+      
+      // Aunque el logout falle en el backend, limpiar estado local
+      setUser(null);
+      authStorage.removeUser();
+      router.push('/login');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     login,
     logout,
     isLoading,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   };
 
   return (
@@ -105,8 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Hook para usar el contexto
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
