@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Cosecha, CosechaFormData, Siembra } from '@/lib/types';
+import { apiClient, getErrorMessage } from '@/lib/api';
+import { convertPlantingsToCosechas } from '@/lib/adapters/plantingAdapter';
 
 // Mock data - En una aplicación real esto vendría de una API
 const MOCK_COSECHAS: Cosecha[] = [
@@ -53,6 +55,7 @@ const MOCK_COSECHAS: Cosecha[] = [
 
 interface UseCosechasOptions {
   autoload?: boolean;
+  useMockData?: boolean; // Nueva opción para forzar mock data
   filters?: {
     siembra_id?: string;
     tipo?: string;
@@ -61,14 +64,15 @@ interface UseCosechasOptions {
 }
 
 export function useCosechas(options: UseCosechasOptions = {}) {
-  const { autoload = true, filters } = options;
+  const { autoload = true, useMockData = false, filters } = options;
   
   const [cosechas, setCosechas] = useState<Cosecha[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
 
-  // Simular llamada a API para obtener cosechas
-  const fetchCosechas = useCallback(async () => {
+  // Función para usar mock data
+  const useMockFallback = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -94,13 +98,63 @@ export function useCosechas(options: UseCosechasOptions = {}) {
       );
       
       setCosechas(result);
+      setIsConnected(false);
     } catch (err) {
-      setError('Error al cargar las cosechas');
-      console.error('Error fetching cosechas:', err);
+      setError('Error al cargar las cosechas (modo offline)');
+      console.error('Error with mock cosechas:', err);
     } finally {
       setIsLoading(false);
     }
   }, [filters]);
+
+  // Función para usar API real
+  const fetchCosechasFromAPI = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Obtener plantings cosechados (con yield > 0)
+      const response = await apiClient.getPlantings(1, 100, '');
+      
+      // Convertir plantings cosechados a cosechas
+      let cosechasFromAPI = convertPlantingsToCosechas(response.data);
+      
+      // Aplicar filtros si existen
+      if (filters) {
+        if (filters.siembra_id) {
+          cosechasFromAPI = cosechasFromAPI.filter(c => c.siembra_id === filters.siembra_id);
+        }
+        if (filters.calidad_min) {
+          cosechasFromAPI = cosechasFromAPI.filter(c => c.calidad >= filters.calidad_min);
+        }
+      }
+      
+      // Ordenar por fecha más reciente
+      cosechasFromAPI = cosechasFromAPI.sort((a, b) => 
+        new Date(b.fecha_cosecha).getTime() - new Date(a.fecha_cosecha).getTime()
+      );
+      
+      setCosechas(cosechasFromAPI);
+      setIsConnected(true);
+    } catch (err) {
+      console.error('API error, falling back to mock cosechas:', err);
+      setIsConnected(false);
+      
+      // Fallback a mock data si la API falla
+      await useMockFallback();
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters, useMockFallback]);
+
+  // Función principal de fetch que decide qué usar
+  const fetchCosechas = useCallback(async () => {
+    if (useMockData) {
+      await useMockFallback();
+    } else {
+      await fetchCosechasFromAPI();
+    }
+  }, [useMockData, useMockFallback, fetchCosechasFromAPI]);
 
   // Cargar cosechas automáticamente al montar el componente
   useEffect(() => {
@@ -317,6 +371,7 @@ export function useCosechas(options: UseCosechasOptions = {}) {
     cosechas,
     isLoading,
     error,
+    isConnected,
     
     // Acciones CRUD
     fetchCosechas,
