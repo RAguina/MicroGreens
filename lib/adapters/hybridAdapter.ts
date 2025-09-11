@@ -234,20 +234,8 @@ export const siembraFormDataToPlantingFormData = (
   plantTypes?: PlantType[],
   userId?: string
 ): { plantingData: any; shouldCreatePlantType?: PlantType } => {
-  console.log('🔄 [hybridAdapter] Convirtiendo datos:', {
-    tipo_microgreen: siembraData.tipo_microgreen,
-    plantTypesCount: plantTypes?.length || 0,
-    plantTypesNames: plantTypes?.map(pt => pt.name) || []
-  });
-  
   // Buscar PlantType existente
   const plantType = plantTypes ? getMicrogreenPlantType(siembraData.tipo_microgreen, plantTypes) : undefined;
-  
-  console.log('🔍 [hybridAdapter] PlantType encontrado:', plantType ? {
-    id: plantType.id,
-    name: plantType.name,
-    daysToHarvest: plantType.daysToHarvest
-  } : 'NO ENCONTRADO');
   
   let plantingData: any = {
     datePlanted: siembraData.fecha_siembra,

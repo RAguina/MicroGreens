@@ -17,12 +17,8 @@ export default function NuevaSiembraPage() {
     setIsLoading(true);
     
     try {
-      console.log('🌱 [NuevaSiembra] Enviando datos:', data);
-      
       // Usar hook real para crear siembra
       const newSiembra = await createSiembra(data);
-      
-      console.log('✅ [NuevaSiembra] Siembra creada:', newSiembra);
       
       // Mostrar mensaje de éxito (en una app real usaríamos toast/notification)
       alert('Siembra registrada exitosamente');
@@ -30,7 +26,7 @@ export default function NuevaSiembraPage() {
       // Redirigir a la lista de siembras
       router.push('/siembras');
     } catch (error) {
-      console.error('❌ [NuevaSiembra] Error al crear siembra:', error);
+      console.error('Error al crear siembra:', error);
       throw new Error('Error al registrar la siembra. Inténtalo nuevamente.');
     } finally {
       setIsLoading(false);

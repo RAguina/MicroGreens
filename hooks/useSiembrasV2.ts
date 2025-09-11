@@ -94,9 +94,6 @@ export function useSiembrasV2(options: UseSiembrasOptions = {}) {
     setIsLoading(true);
     setError(null);
     
-    console.log('🔄 [useSiembrasV2] Intentando conectar a API...');
-    console.log('🌐 [useSiembrasV2] API URL:', process.env.NEXT_PUBLIC_API_URL);
-    
     try {
       // Construir parámetros de query para filtros
       const params = new URLSearchParams({
@@ -108,18 +105,11 @@ export function useSiembrasV2(options: UseSiembrasOptions = {}) {
         params.append('status', filters.status);
       }
 
-      console.log('📡 [useSiembrasV2] Haciendo request a /api/plantings...');
-      
       // Obtener plantings desde API v2.0
       const response = await apiClient.getPlantings(1, 100, '');
       
-      console.log('✅ [useSiembrasV2] Respuesta de API recibida:', response);
-      console.log('📊 [useSiembrasV2] Plantings encontrados:', response.data.length);
-      
       // Convertir plantings del backend a siembras del frontend usando adaptador híbrido
       let siembrasFromAPI = plantingsToSiembras(response.data, plantTypes);
-      
-      console.log('🔄 [useSiembrasV2] Conversión a siembras:', siembrasFromAPI.length);
       
       // Aplicar filtros frontend (para compatibilidad)
       if (filters) {
@@ -133,9 +123,8 @@ export function useSiembrasV2(options: UseSiembrasOptions = {}) {
       
       setSiembras(siembrasFromAPI);
       setIsConnected(true);
-      console.log('🎉 [useSiembrasV2] API conectada exitosamente, datos establecidos');
     } catch (err) {
-      console.error('❌ [useSiembrasV2] API error, falling back to mock data:', err);
+      console.error('API error, falling back to mock data:', err);
       setIsConnected(false);
       
       // Fallback a mock data si la API falla

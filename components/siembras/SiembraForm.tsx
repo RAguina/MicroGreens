@@ -66,16 +66,8 @@ export default function SiembraForm({
   const [error, setError] = useState('');
   const [expectedHarvestDate, setExpectedHarvestDate] = useState('');
   
-  console.log('🌿 [SiembraForm] Component rendering...');
-  
   // Intentar cargar PlantTypes con manejo de errores
   const { plantTypes, isLoading: plantTypesLoading, error: plantTypesError } = usePlantTypes({ autoload: true });
-  
-  console.log('🌿 [SiembraForm] PlantTypes state:', {
-    count: plantTypes?.length || 0,
-    loading: plantTypesLoading,
-    error: plantTypesError
-  });
   
   const isEditing = !!siembra;
 
