@@ -109,7 +109,7 @@ export default function CosechaCard({
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent className="bg-white border border-gray-200 shadow-lg" align="end">
                 {onView && (
                   <DropdownMenuItem onClick={() => onView(cosecha)}>
                     <Eye className="mr-2 h-4 w-4" />
