@@ -29,11 +29,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Sprout, CalendarDays } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 
-// Schema de validación
+// Schema de validación más flexible
 const siembraSchema = z.object({
-  tipo_microgreen: z.enum(TIPOS_MICROGREENS as readonly [string, ...string[]], {
-    errorMap: () => ({ message: ERROR_MESSAGES.REQUIRED_FIELD })
-  }),
+  tipo_microgreen: z.string().min(1, ERROR_MESSAGES.REQUIRED_FIELD),
   fecha_siembra: z.string().min(1, ERROR_MESSAGES.REQUIRED_FIELD),
   cantidad_sembrada: z.number()
     .min(VALIDATION.MIN_CANTIDAD_SEMBRADA, ERROR_MESSAGES.MIN_CANTIDAD)
@@ -67,7 +65,17 @@ export default function SiembraForm({
 }: SiembraFormProps) {
   const [error, setError] = useState('');
   const [expectedHarvestDate, setExpectedHarvestDate] = useState('');
-  const { plantTypes, isLoading: plantTypesLoading } = usePlantTypes({ autoload: true });
+  
+  console.log('🌿 [SiembraForm] Component rendering...');
+  
+  // Intentar cargar PlantTypes con manejo de errores
+  const { plantTypes, isLoading: plantTypesLoading, error: plantTypesError } = usePlantTypes({ autoload: true });
+  
+  console.log('🌿 [SiembraForm] PlantTypes state:', {
+    count: plantTypes?.length || 0,
+    loading: plantTypesLoading,
+    error: plantTypesError
+  });
   
   const isEditing = !!siembra;
 
