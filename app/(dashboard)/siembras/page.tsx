@@ -5,7 +5,7 @@ import { Siembra } from '@/lib/types';
 import SiembrasList from '@/components/siembras/SiembrasList';
 import { Button } from '@/components/ui/button';
 import { Plus, Wifi, WifiOff } from 'lucide-react';
-import { useSiembras } from '@/hooks/useSiembras';
+import { useSiembrasV2 } from '@/hooks/useSiembrasV2';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function SiembrasPage() {
@@ -16,7 +16,7 @@ export default function SiembrasPage() {
     error, 
     isConnected,
     deleteSiembra 
-  } = useSiembras();
+  } = useSiembrasV2();
 
   const handleCreateNew = () => {
     router.push('/siembras/nueva');

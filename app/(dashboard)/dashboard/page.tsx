@@ -13,17 +13,17 @@ import {
   Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useSiembras } from '@/hooks/useSiembras';
-import { useCosechas } from '@/hooks/useCosechas';
+import { useSiembrasV2 } from '@/hooks/useSiembrasV2';
+import { useCosechasV2 } from '@/hooks/useCosechasV2';
 import { MICROGREEN_LABELS, ESTADO_LABELS, ESTADO_COLORS } from '@/lib/constants';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export default function DashboardPage() {
-  // Usar hooks para datos reales
-  const { siembras, getStats: getSiembrasStats, getUpcomingHarvests } = useSiembras();
-  const { cosechas, getStats: getCosechasStats } = useCosechas();
+  // Usar hooks V2 para datos reales de la API
+  const { siembras, getStats: getSiembrasStats, getUpcomingHarvests } = useSiembrasV2();
+  const { cosechas, getStats: getCosechasStats } = useCosechasV2();
   
   const [dashboardData, setDashboardData] = useState({
     siembrasStats: { sembradas: 0, creciendo: 0, listas: 0, cosechadas: 0 },
