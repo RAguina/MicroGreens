@@ -26,36 +26,36 @@ export default function DashboardPage() {
   const { harvests, getStats: getHarvestsStats } = useHarvests();
   
   const [dashboardData, setDashboardData] = useState({
-    plantingsStats: { planted: 0, growing: 0, readyToHarvest: 0, harvested: 0 },
+    plantingsStats: { planted: 0, growing: 0, readyToHarvest: 0, harvested: 0, total: 0 },
     harvestsStats: { total: 0, totalWeight: 0, thisMonth: { count: 0 }, averageQuality: 0 },
-    proximasCosechas: []
+    upcomingHarvests: []
   });
 
-  // Actualizar datos del dashboard cuando cambien siembras o cosechas
+  // Actualizar datos del dashboard cuando cambien plantings o harvests
   useEffect(() => {
-    const siembrasStats = getSiembrasStats();
-    const cosechasStats = getCosechasStats();
-    const proximasCosechas = getUpcomingHarvests(3);
+    const plantingsStats = getPlantingsStats();
+    const harvestsStats = getHarvestsStats();
+    const upcomingHarvests = getUpcomingHarvests(3);
 
     setDashboardData({
-      siembrasStats,
-      cosechasStats,
-      proximasCosechas
+      plantingsStats,
+      harvestsStats,
+      upcomingHarvests
     });
-  }, [siembras, cosechas, getSiembrasStats, getCosechasStats, getUpcomingHarvests]);
+  }, [plantings, harvests, getPlantingsStats, getHarvestsStats, getUpcomingHarvests]);
 
   const stats = [
     {
       title: 'Siembras Activas',
-      value: (dashboardData.siembrasStats.sembradas + dashboardData.siembrasStats.creciendo).toString(),
-      description: 'Sembradas + Creciendo',
+      value: (dashboardData.plantingsStats.planted + dashboardData.plantingsStats.growing).toString(),
+      description: 'Plantado + Creciendo',
       icon: Sprout,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
     },
     {
       title: 'Cosechas del Mes',
-      value: dashboardData.cosechasStats.cosechasEsteMes.toString(),
+      value: dashboardData.harvestsStats.thisMonth.count.toString(),
       description: 'Total este mes',
       icon: Scissors,
       color: 'text-green-600',
@@ -63,7 +63,7 @@ export default function DashboardPage() {
     },
     {
       title: 'Peso Total Cosechado',
-      value: `${dashboardData.cosechasStats.pesoTotal}g`,
+      value: `${dashboardData.harvestsStats.totalWeight}g`,
       description: 'Todas las cosechas',
       icon: Scale,
       color: 'text-orange-600',
@@ -71,7 +71,7 @@ export default function DashboardPage() {
     },
     {
       title: 'Próximas Cosechas',
-      value: dashboardData.proximasCosechas.length.toString(),
+      value: dashboardData.upcomingHarvests.length.toString(),
       description: 'En los próximos 3 días',
       icon: Calendar,
       color: 'text-purple-600',
@@ -79,40 +79,46 @@ export default function DashboardPage() {
     },
   ];
 
-  // Generar actividad reciente real basada en datos
+  // Generar actividad reciente real basada en datos v2.0
   const getRecentActivity = () => {
     const activities = [];
 
-    // Agregar siembras recientes (últimas 3)
-    const siembrasRecientes = [...siembras]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    // Agregar plantings recientes (últimas 3)
+    const recentPlantings = [...plantings]
+      .sort((a, b) => new Date(b.datePlanted).getTime() - new Date(a.datePlanted).getTime())
       .slice(0, 2);
 
-    siembrasRecientes.forEach((siembra, index) => {
+    recentPlantings.forEach((planting) => {
+      const plantName = planting.plantType?.name || planting.plantName || 'Sin nombre';
       activities.push({
-        id: `siembra-${siembra.id}`,
-        type: 'siembra',
-        description: `Nueva siembra de ${MICROGREEN_LABELS[siembra.tipo_microgreen]} en bandeja ${siembra.ubicacion_bandeja}`,
-        time: format(new Date(siembra.created_at), "dd/MM/yyyy 'a las' HH:mm", { locale: es }),
-        status: siembra.estado
+        id: `planting-${planting.id}`,
+        type: 'planting',
+        description: `Nueva siembra de ${plantName} en bandeja ${planting.trayNumber || 'sin ubicación'}`,
+        time: format(new Date(planting.datePlanted), "dd/MM/yyyy 'a las' HH:mm", { locale: es }),
+        status: planting.status
       });
     });
 
-    // Agregar cosechas recientes (últimas 2)
-    const cosechasRecientes = [...cosechas]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    // Agregar harvests recientes (últimas 2)
+    const recentHarvests = [...harvests]
+      .sort((a, b) => new Date(b.dateHarvested).getTime() - new Date(a.dateHarvested).getTime())
       .slice(0, 2);
 
-    cosechasRecientes.forEach(cosecha => {
-      const siembraRelacionada = siembras.find(s => s.id === cosecha.siembra_id);
-      const tipoMicrogreen = siembraRelacionada ? MICROGREEN_LABELS[siembraRelacionada.tipo_microgreen] : 'microgreen';
+    recentHarvests.forEach(harvest => {
+      let plantName = 'microgreen';
+      if (harvest.plantingId) {
+        const relatedPlanting = plantings.find(p => p.id === harvest.plantingId);
+        plantName = relatedPlanting?.plantType?.name || relatedPlanting?.plantName || 'microgreen';
+      } else if (harvest.plantName) {
+        plantName = harvest.plantName;
+      }
       
       activities.push({
-        id: `cosecha-${cosecha.id}`,
-        type: 'cosecha',
-        description: `Cosecha de ${tipoMicrogreen} - ${cosecha.peso_cosechado}g obtenidos`,
-        time: format(new Date(cosecha.created_at), "dd/MM/yyyy 'a las' HH:mm", { locale: es }),
-        status: 'cosechado'
+        id: `harvest-${harvest.id}`,
+        type: 'harvest',
+        description: `Cosecha de ${plantName} - ${harvest.weight}g obtenidos`,
+        time: format(new Date(harvest.dateHarvested), "dd/MM/yyyy 'a las' HH:mm", { locale: es }),
+        status: 'harvested'
       });
     });
 
@@ -125,23 +131,11 @@ export default function DashboardPage() {
   const recentActivity = getRecentActivity();
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'sembrado': return 'bg-status-sembrado';
-      case 'creciendo': return 'bg-status-creciendo';
-      case 'listo': return 'bg-status-listo';
-      case 'cosechado': return 'bg-status-cosechado';
-      default: return 'bg-gray-500';
-    }
+    return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'bg-gray-500';
   };
 
   const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'sembrado': return 'Sembrado';
-      case 'creciendo': return 'Creciendo';
-      case 'listo': return 'Listo';
-      case 'cosechado': return 'Cosechado';
-      default: return status;
-    }
+    return STATUS_LABELS[status as keyof typeof STATUS_LABELS] || status;
   };
 
   return (
@@ -226,6 +220,11 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ))}
+              {recentActivity.length === 0 && (
+                <p className="text-gray-500 text-center py-4">
+                  No hay actividad reciente
+                </p>
+              )}
             </div>
             <div className="mt-4 text-center">
               <Button variant="outline" size="sm">
@@ -268,11 +267,11 @@ export default function DashboardPage() {
                 Ver Cosechas
               </Link>
             </Button>
-            {dashboardData.proximasCosechas.length > 0 && (
+            {dashboardData.upcomingHarvests.length > 0 && (
               <Button asChild className="w-full justify-start bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100">
                 <Link href="/siembras">
                   <Calendar className="mr-3 h-4 w-4" />
-                  {dashboardData.proximasCosechas.length} Próximas Cosechas
+                  {dashboardData.upcomingHarvests.length} Próximas Cosechas
                 </Link>
               </Button>
             )}
