@@ -19,17 +19,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  
+  // Emergency fallback - skip auth check if there are repeated failures
+  const [skipAuthCheck] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const failures = localStorage.getItem('auth-failures');
+      return failures && parseInt(failures) > 3;
+    }
+    return false;
+  });
 
   // Verificar autenticación al cargar - usar backend real
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
     
     const initAuth = async () => {
       try {
         console.log('🔍 [AuthProvider] Checking authentication status...');
         
-        // Intentar obtener usuario actual del backend (verifica cookie JWT)
-        const currentUser = await realAuth.getCurrentUser();
+        // Skip auth check if emergency fallback is active
+        if (skipAuthCheck) {
+          console.log('⚠️ [AuthProvider] Skipping auth check due to repeated failures');
+          if (mounted) {
+            setUser(null);
+            setIsLoading(false);
+          }
+          return;
+        }
+        
+        // Timeout de 10 segundos para evitar cuelgue
+        const authPromise = realAuth.getCurrentUser();
+        const timeoutPromise = new Promise<null>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error('Auth timeout - taking too long to respond'));
+          }, 10000);
+        });
+        
+        // Race entre la auth y el timeout
+        const currentUser = await Promise.race([authPromise, timeoutPromise]);
+        
+        // Limpiar timeout si llegamos aquí
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
         
         if (!mounted) return; // Prevent state update if component unmounted
         
@@ -37,6 +70,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('✅ [AuthProvider] User authenticated:', currentUser.email);
           setUser(currentUser);
           authStorage.setUser(currentUser); // Guardar en localStorage para UX
+          // Reset failure count on success
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth-failures');
+          }
         } else {
           console.log('❌ [AuthProvider] No authenticated user found');
           // No hay sesión activa, limpiar localStorage
@@ -45,6 +82,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('❌ [AuthProvider] Error initializing auth:', error);
+        
+        // Track failures
+        if (typeof window !== 'undefined') {
+          const currentFailures = parseInt(localStorage.getItem('auth-failures') || '0');
+          localStorage.setItem('auth-failures', String(currentFailures + 1));
+        }
+        
         if (mounted) {
           authStorage.removeUser();
           setUser(null);
@@ -54,6 +98,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('✅ [AuthProvider] Auth initialization complete');
           setIsLoading(false);
         }
+        // Limpiar timeout en caso de que aún esté activo
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
       }
     };
 
@@ -62,6 +110,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Cleanup function
     return () => {
       mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, []);
 
