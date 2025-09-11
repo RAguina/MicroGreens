@@ -38,9 +38,8 @@ import {
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-// Schema de validación
-const cosechaSchema = z.object({
-  siembra_id: z.string().min(1, ERROR_MESSAGES.REQUIRED_FIELD),
+// Schema de validación base
+const baseCosechaSchema = z.object({
   fecha_cosecha: z.string().min(1, ERROR_MESSAGES.REQUIRED_FIELD),
   peso_cosechado: z.number()
     .min(VALIDATION.MIN_PESO_COSECHADO, ERROR_MESSAGES.MIN_PESO)
@@ -53,7 +52,17 @@ const cosechaSchema = z.object({
     .optional(),
 });
 
-type CosechaFormValues = z.infer<typeof cosechaSchema>;
+// Schema que requiere siembra_id
+const cosechaConSiembraSchema = baseCosechaSchema.extend({
+  siembra_id: z.string().min(1, ERROR_MESSAGES.REQUIRED_FIELD),
+});
+
+// Schema para cosecha independiente
+const cosechaIndependienteSchema = baseCosechaSchema.extend({
+  siembra_id: z.string().optional(),
+});
+
+type CosechaFormValues = z.infer<typeof cosechaConSiembraSchema>;
 
 interface CosechaFormProps {
   cosecha?: Cosecha;
@@ -78,13 +87,20 @@ export default function CosechaForm({
 }: CosechaFormProps) {
   const [error, setError] = useState('');
   const [selectedSiembra, setSelectedSiembra] = useState<Siembra | null>(null);
+  const [isIndependent, setIsIndependent] = useState(false);
   
   const isEditing = !!cosecha;
   
-  // Filtrar siembras que se pueden cosechar (listas o creciendo)
+  // Filtrado inteligente: mostrar siembras que se pueden cosechar
+  // Incluir: sembrado, creciendo, listo (excluir solo cosechado y failed)
   const siembrasDisponibles = siembras.filter(s => 
-    ['listo', 'creciendo'].includes(s.estado)
+    !['cosechado'].includes(s.estado)
   );
+
+  // Función para obtener el schema dinámico
+  const getCurrentSchema = () => {
+    return isIndependent ? cosechaIndependienteSchema : cosechaConSiembraSchema;
+  };
 
   const {
     register,
@@ -94,7 +110,7 @@ export default function CosechaForm({
     setValue,
     reset
   } = useForm<CosechaFormValues>({
-    resolver: zodResolver(cosechaSchema),
+    resolver: zodResolver(getCurrentSchema()),
     defaultValues: cosecha ? {
       siembra_id: cosecha.siembra_id,
       fecha_cosecha: cosecha.fecha_cosecha,
@@ -120,6 +136,14 @@ export default function CosechaForm({
       setSelectedSiembra(null);
     }
   }, [watchedSiembraId, siembras]);
+
+  // Limpiar siembra seleccionada cuando cambio a independiente
+  useEffect(() => {
+    if (isIndependent) {
+      setValue('siembra_id', '');
+      setSelectedSiembra(null);
+    }
+  }, [isIndependent, setValue]);
 
   // Calcular estadísticas de la siembra seleccionada
   const getSiembraStats = () => {
@@ -210,48 +234,103 @@ export default function CosechaForm({
       
       <CardContent>
         <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-6">
-          {/* Selección de siembra */}
-          <div className="space-y-2">
-            <Label htmlFor="siembra_id">Siembra a cosechar *</Label>
-            <Select
-              value={watch('siembra_id') || ''}
-              onValueChange={(value) => setValue('siembra_id', value)}
-              disabled={isLoading || isEditing}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona la siembra a cosechar" />
-              </SelectTrigger>
-              <SelectContent>
-                {siembrasDisponibles.map((siembra) => (
-                  <SelectItem key={siembra.id} value={siembra.id}>
-                    <div className="flex items-center space-x-2">
-                      <span>{MICROGREEN_LABELS[siembra.tipo_microgreen]}</span>
-                      <span className="text-gray-500">- {siembra.ubicacion_bandeja}</span>
-                      <Badge 
-                        variant="outline" 
-                        className={siembra.estado === 'listo' ? 'text-green-600' : 'text-blue-600'}
-                      >
-                        {siembra.estado === 'listo' ? 'Listo' : 'Creciendo'}
-                      </Badge>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.siembra_id && (
-              <p className="text-sm text-red-600">{errors.siembra_id.message}</p>
-            )}
+          {/* Tipo de cosecha */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <Button
+                type="button"
+                variant={!isIndependent ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setIsIndependent(false)}
+                disabled={isLoading || isEditing}
+              >
+                Cosechar Siembra Existente
+              </Button>
+              <Button
+                type="button"
+                variant={isIndependent ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setIsIndependent(true)}
+                disabled={isLoading || isEditing}
+              >
+                Cosecha Independiente
+              </Button>
+            </div>
             
-            {siembrasDisponibles.length === 0 && (
+            {isIndependent && (
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  No hay siembras disponibles para cosechar. 
-                  Las siembras deben estar en estado "Creciendo" o "Listo".
+                  Modo cosecha independiente: registra una cosecha sin vincular a una siembra específica.
                 </AlertDescription>
               </Alert>
             )}
           </div>
+
+          {/* Selección de siembra - solo si no es independiente */}
+          {!isIndependent && (
+            <div className="space-y-2">
+              <Label htmlFor="siembra_id">Siembra a cosechar *</Label>
+              <Select
+                value={watch('siembra_id') || ''}
+                onValueChange={(value) => setValue('siembra_id', value)}
+                disabled={isLoading || isEditing}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona la siembra a cosechar" />
+                </SelectTrigger>
+                <SelectContent>
+                  {siembrasDisponibles.map((siembra) => (
+                    <SelectItem key={siembra.id} value={siembra.id}>
+                      <div className="flex items-center space-x-2">
+                        <span>{MICROGREEN_LABELS[siembra.tipo_microgreen]}</span>
+                        <span className="text-gray-500">- {siembra.ubicacion_bandeja}</span>
+                        <Badge 
+                          variant="outline" 
+                          className={siembra.estado === 'listo' ? 'text-green-600' : 'text-blue-600'}
+                        >
+                          {siembra.estado === 'listo' ? 'Listo' : 'Creciendo'}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.siembra_id && (
+                <p className="text-sm text-red-600">{errors.siembra_id.message}</p>
+              )}
+              
+              {siembrasDisponibles.length === 0 && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    No hay siembras disponibles para cosechar. 
+                    Las siembras deben estar en estado "Creciendo" o "Listo".
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
+
+          {/* Información para cosecha independiente */}
+          {isIndependent && (
+            <Card className="bg-orange-50 border-orange-200">
+              <CardContent className="pt-4">
+                <div className="flex items-center space-x-2">
+                  <Info className="h-5 w-5 text-orange-600" />
+                  <div>
+                    <div className="font-medium text-orange-900">
+                      Cosecha Independiente
+                    </div>
+                    <div className="text-sm text-orange-700">
+                      Esta cosecha se registrará sin asociar a una siembra específica.
+                      Útil para cosechas de emergencia, pruebas, o cuando no tienes la siembra registrada.
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Información de la siembra seleccionada */}
           {selectedSiembra && siembraStats && (
@@ -422,7 +501,7 @@ export default function CosechaForm({
             <Button
               type="submit"
               className="bg-green-600 hover:bg-green-700"
-              disabled={isLoading || siembrasDisponibles.length === 0}
+              disabled={isLoading || (!isIndependent && siembrasDisponibles.length === 0)}
             >
               {isLoading ? (
                 <>

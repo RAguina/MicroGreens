@@ -1,48 +1,50 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Cosecha } from '@/lib/types';
-import CosechasList from '@/components/cosechas/CosechasList';
-import { useCosechasV2 } from '@/hooks/useCosechasV2';
-import { useSiembrasV2 } from '@/hooks/useSiembrasV2';
+import { Harvest } from '@/lib/types';
+import HarvestsList from '@/components/harvests/HarvestsList';
+import { useHarvests } from '@/hooks/useHarvests';
+import { usePlantings } from '@/hooks/usePlantings';
 
-export default function CosechasPage() {
+export default function HarvestsPage() {
   const router = useRouter();
-  const { cosechas, isLoading: cosechasLoading, deleteCosecha } = useCosechasV2({ autoload: true });
-  const { siembras, isLoading: siembrasLoading } = useSiembrasV2();
+  const { harvests, isLoading: harvestsLoading, deleteHarvest } = useHarvests({ autoload: true });
+  const { plantings, isLoading: plantingsLoading } = usePlantings();
 
-  const isLoading = cosechasLoading || siembrasLoading;
+  const isLoading = harvestsLoading || plantingsLoading;
 
   const handleCreateNew = () => {
     router.push('/cosechas/nueva');
   };
 
-  const handleEdit = (cosecha: Cosecha) => {
+  const handleEdit = (harvest: Harvest) => {
     // En el futuro implementaremos edición de cosechas
-    console.log('Editar cosecha:', cosecha.id);
-    // router.push(`/cosechas/${cosecha.id}?edit=true`);
+    console.log('Editar harvest:', harvest.id);
+    // router.push(`/cosechas/${harvest.id}?edit=true`);
   };
 
-  const handleView = (cosecha: Cosecha) => {
+  const handleView = (harvest: Harvest) => {
     // En el futuro implementaremos vista detallada
-    console.log('Ver detalle cosecha:', cosecha.id);
-    // router.push(`/cosechas/${cosecha.id}`);
+    console.log('Ver detalle harvest:', harvest.id);
+    // router.push(`/cosechas/${harvest.id}`);
   };
 
-  const handleDelete = async (cosecha: Cosecha) => {
-    // Encontrar la siembra relacionada para mostrar información más clara
-    const siembraRelacionada = siembras.find(s => s.id === cosecha.siembra_id);
-    const tipoMicrogreen = siembraRelacionada ? siembraRelacionada.tipo_microgreen : 'microgreen';
+  const handleDelete = async (harvest: Harvest) => {
+    // Encontrar la planting relacionada para mostrar información más clara
+    const relatedPlanting = plantings.find(p => p.id === harvest.plantingId);
+    const plantName = relatedPlanting ? 
+      (relatedPlanting.plantType?.name || relatedPlanting.plantName) : 
+      'cultivo';
     
     const confirmed = window.confirm(
-      `¿Estás seguro de que quieres eliminar la cosecha de ${tipoMicrogreen} del ${new Date(cosecha.fecha_cosecha).toLocaleDateString('es-ES')}?`
+      `¿Estás seguro de que quieres eliminar la cosecha de ${plantName} del ${new Date(harvest.harvestDate).toLocaleDateString('es-ES')}?`
     );
     
     if (confirmed) {
       try {
-        await deleteCosecha(cosecha.id);
+        await deleteHarvest(harvest.id);
       } catch (error) {
-        console.error('Error eliminando cosecha:', error);
+        console.error('Error eliminando harvest:', error);
         alert('Error al eliminar la cosecha. Intenta nuevamente.');
       }
     }
@@ -50,9 +52,9 @@ export default function CosechasPage() {
 
   return (
     <div className="space-y-6">
-      <CosechasList
-        cosechas={cosechas}
-        siembras={siembras}
+      <HarvestsList
+        harvests={harvests}
+        plantings={plantings}
         isLoading={isLoading}
         onCreateNew={handleCreateNew}
         onEdit={handleEdit}

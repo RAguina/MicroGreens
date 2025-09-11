@@ -175,66 +175,21 @@ export interface HarvestFormData {
   freshness?: number;
 }
 
-// =====================================
-// 🔄 COMPATIBILITY LAYER (Frontend Legacy)
-// =====================================
-
-// Mantener compatibilidad con frontend actual
-export interface Siembra {
-  id: string;
-  tipo_microgreen: string;
-  fecha_siembra: string;
-  cantidad_sembrada: number;
-  ubicacion_bandeja: string;
-  fecha_esperada_cosecha: string;
-  fecha_real_cosecha?: string;
-  estado: 'sembrado' | 'creciendo' | 'listo' | 'cosechado';
-  notas?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Cosecha {
-  id: string;
-  siembra_id: string;
-  fecha_cosecha: string;
-  peso_cosechado: number;
-  calidad: 1 | 2 | 3 | 4 | 5;
-  notas?: string;
-  created_at: string;
-}
-
-export interface SiembraFormData {
-  tipo_microgreen: string;
-  fecha_siembra: string;
-  cantidad_sembrada: number;
-  ubicacion_bandeja: string;
-  fecha_esperada_cosecha?: string;
-  notas?: string;
-}
-
-export interface CosechaFormData {
-  siembra_id: string;
-  fecha_cosecha: string;
-  peso_cosechado: number;
-  calidad: Cosecha['calidad'];
-  notas?: string;
-}
 
 // =====================================
 // 📊 ESTADÍSTICAS Y ANALYTICS
 // =====================================
 
-export interface EstadisticasDashboard {
-  siembras_activas: number;
-  cosechas_mes: number;
-  peso_total_mes: number;
-  rendimiento_promedio: number;
-  proximas_cosechas: Siembra[];
-  produccion_por_tipo: {
-    tipo: string;
-    cantidad: number;
-    peso_total: number;
+export interface DashboardStats {
+  activePlantings: number;
+  harvestsThisMonth: number;
+  totalWeightThisMonth: number;
+  averageYield: number;
+  upcomingHarvests: Planting[];
+  productionByType: {
+    plantType: PlantType;
+    count: number;
+    totalWeight: number;
   }[];
 }
 
@@ -332,24 +287,6 @@ export const HARVEST_QUALITIES = [
   'POOR'
 ] as const;
 
-// Legacy constants (mantener compatibilidad)
-export const TIPOS_MICROGREENS = [
-  'brócoli',
-  'rábano', 
-  'girasol',
-  'guisante',
-  'rúcula',
-  'amaranto'
-] as const;
-
-export const ESTADOS_SIEMBRA = [
-  'sembrado',
-  'creciendo',
-  'listo',
-  'cosechado'
-] as const;
-
-export const CALIDAD_OPTIONS = [1, 2, 3, 4, 5] as const;
 
 // =====================================
 // 🔄 TYPE GUARDS Y HELPERS
@@ -367,27 +304,22 @@ export const isPlantCategory = (category: string): category is typeof PLANT_CATE
   return PLANT_CATEGORIES.includes(category as any);
 };
 
-// Convertir quality numérica a enum
-export const mapQualityToEnum = (quality: 1 | 2 | 3 | 4 | 5): HarvestQuality => {
-  const qualityMap = {
-    5: 'EXCELLENT',
-    4: 'GOOD', 
-    3: 'FAIR',
-    2: 'POOR',
-    1: 'POOR'
-  } as const;
-  
-  return qualityMap[quality];
+// Helper para convertir quality score a enum
+export const getQualityFromScore = (score: number): HarvestQuality => {
+  if (score >= 9) return 'EXCELLENT';
+  if (score >= 7) return 'GOOD';
+  if (score >= 5) return 'FAIR';
+  return 'POOR';
 };
 
-// Convertir enum a quality numérica
-export const mapEnumToQuality = (quality: HarvestQuality): 1 | 2 | 3 | 4 | 5 => {
-  const enumMap = {
-    'EXCELLENT': 5,
-    'GOOD': 4,
-    'FAIR': 3,
-    'POOR': 2
+// Helper para obtener score numérico de quality
+export const getScoreFromQuality = (quality: HarvestQuality): number => {
+  const scoreMap = {
+    'EXCELLENT': 10,
+    'GOOD': 8,
+    'FAIR': 6,
+    'POOR': 3
   } as const;
   
-  return enumMap[quality];
+  return scoreMap[quality];
 };

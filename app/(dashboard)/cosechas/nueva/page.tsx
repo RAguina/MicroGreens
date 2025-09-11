@@ -2,35 +2,35 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CosechaFormData } from '@/lib/types';
-import CosechaForm from '@/components/cosechas/CosechaForm';
+import { HarvestFormData } from '@/lib/types';
+import HarvestForm from '@/components/harvests/HarvestForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { useSiembrasV2 } from '@/hooks/useSiembrasV2';
-import { useCosechasV2 } from '@/hooks/useCosechasV2';
+import { usePlantings } from '@/hooks/usePlantings';
+import { useHarvests } from '@/hooks/useHarvests';
 
-export default function NuevaCosechaPage() {
+export default function NuevaHarvestPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Usar hooks reales para obtener datos de la API
-  const { siembras, isLoading: isLoadingSiembras } = useSiembrasV2();
-  const { createCosecha } = useCosechasV2();
+  // Usar hooks v2.0 para obtener datos de la API
+  const { plantings, isLoading: isLoadingPlantings } = usePlantings();
+  const { createHarvest } = useHarvests();
 
-  // Obtener siembra preseleccionada desde URL
-  const preSelectedSiembraId = searchParams.get('siembra');
+  // Obtener planting preseleccionado desde URL
+  const preSelectedPlantingId = searchParams.get('planting');
 
-  const handleSubmit = async (data: CosechaFormData) => {
+  const handleSubmit = async (data: HarvestFormData) => {
     setIsLoading(true);
     
     try {
-      console.log('🌾 [NuevaCosecha] Enviando datos:', data);
+      console.log('🌾 [NewHarvest] Enviando datos:', data);
       
-      // Usar hook real para crear cosecha
-      const newCosecha = await createCosecha(data);
+      // Crear harvest usando hook v2.0
+      const newHarvest = await createHarvest(data);
       
-      console.log('✅ [NuevaCosecha] Cosecha creada:', newCosecha);
+      console.log('✅ [NewHarvest] Harvest creado:', newHarvest);
       
       // Mostrar mensaje de éxito
       alert('Cosecha registrada exitosamente');
@@ -38,7 +38,7 @@ export default function NuevaCosechaPage() {
       // Redirigir a la lista de cosechas
       router.push('/cosechas');
     } catch (error) {
-      console.error('❌ [NuevaCosecha] Error al crear cosecha:', error);
+      console.error('❌ [NewHarvest] Error al crear harvest:', error);
       throw new Error('Error al registrar la cosecha. Inténtalo nuevamente.');
     } finally {
       setIsLoading(false);
@@ -49,7 +49,7 @@ export default function NuevaCosechaPage() {
     router.back();
   };
 
-  if (isLoadingSiembras) {
+  if (isLoadingPlantings) {
     return (
       <div className="space-y-6">
         <div className="flex items-center space-x-4">
@@ -88,14 +88,14 @@ export default function NuevaCosechaPage() {
       </div>
 
       {/* Formulario */}
-      <CosechaForm
-        siembras={siembras}
-        preSelectedSiembra={preSelectedSiembraId || undefined}
+      <HarvestForm
+        plantings={plantings}
+        preSelectedPlanting={preSelectedPlantingId || undefined}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isLoading={isLoading}
         title="Registrar Nueva Cosecha"
-        description="Completa los datos de tu cosecha de microgreens"
+        description="Completa los datos de tu cosecha"
       />
     </div>
   );
