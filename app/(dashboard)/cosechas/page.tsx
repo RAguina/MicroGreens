@@ -8,7 +8,7 @@ import { useSiembrasV2 } from '@/hooks/useSiembrasV2';
 
 export default function CosechasPage() {
   const router = useRouter();
-  const { cosechas, isLoading: cosechasLoading, deleteCosecha } = useCosechasV2();
+  const { cosechas, isLoading: cosechasLoading, deleteCosecha } = useCosechasV2({ autoload: true });
   const { siembras, isLoading: siembrasLoading } = useSiembrasV2();
 
   const isLoading = cosechasLoading || siembrasLoading;

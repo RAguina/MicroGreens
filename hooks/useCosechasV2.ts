@@ -51,6 +51,8 @@ export function useCosechasV2(options: UseCosechasOptions = {}) {
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
 
+  console.log('📦 [useCosechasV2] Hook inicializado con:', { autoload, useMockData, filters });
+
   // Función para usar mock data
   const useMockFallback = useCallback(async () => {
     setIsLoading(true);
