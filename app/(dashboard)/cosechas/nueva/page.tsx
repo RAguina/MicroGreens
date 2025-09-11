@@ -1,126 +1,44 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CosechaFormData, Siembra } from '@/lib/types';
+import { CosechaFormData } from '@/lib/types';
 import CosechaForm from '@/components/cosechas/CosechaForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-
-// Mock data de siembras disponibles para cosechar
-const mockSiembrasDisponibles: Siembra[] = [
-  {
-    id: '1',
-    tipo_microgreen: 'brócoli',
-    fecha_siembra: '2025-01-05',
-    cantidad_sembrada: 50,
-    ubicacion_bandeja: 'A1',
-    fecha_esperada_cosecha: '2025-01-12',
-    estado: 'listo',
-    notas: 'Primera siembra de prueba',
-    created_at: '2025-01-05T10:00:00Z',
-    updated_at: '2025-01-05T10:00:00Z',
-  },
-  {
-    id: '2',
-    tipo_microgreen: 'rábano',
-    fecha_siembra: '2025-01-07',
-    cantidad_sembrada: 40,
-    ubicacion_bandeja: 'A2',
-    fecha_esperada_cosecha: '2025-01-12',
-    estado: 'creciendo',
-    created_at: '2025-01-07T14:30:00Z',
-    updated_at: '2025-01-07T14:30:00Z',
-  },
-  {
-    id: '3',
-    tipo_microgreen: 'girasol',
-    fecha_siembra: '2025-01-08',
-    cantidad_sembrada: 60,
-    ubicacion_bandeja: 'B1',
-    fecha_esperada_cosecha: '2025-01-16',
-    estado: 'creciendo',
-    notas: 'Semillas de alta calidad',
-    created_at: '2025-01-08T09:15:00Z',
-    updated_at: '2025-01-08T09:15:00Z',
-  },
-  {
-    id: '5',
-    tipo_microgreen: 'guisante',
-    fecha_siembra: '2025-01-06',
-    cantidad_sembrada: 35,
-    ubicacion_bandeja: 'B2',
-    fecha_esperada_cosecha: '2025-01-12',
-    estado: 'listo',
-    created_at: '2025-01-06T16:20:00Z',
-    updated_at: '2025-01-06T16:20:00Z',
-  },
-  {
-    id: '6',
-    tipo_microgreen: 'rúcula',
-    fecha_siembra: '2025-01-09',
-    cantidad_sembrada: 45,
-    ubicacion_bandeja: 'C1',
-    fecha_esperada_cosecha: '2025-01-16',
-    estado: 'creciendo',
-    created_at: '2025-01-09T11:20:00Z',
-    updated_at: '2025-01-09T11:20:00Z',
-  },
-];
+import { useSiembrasV2 } from '@/hooks/useSiembrasV2';
+import { useCosechasV2 } from '@/hooks/useCosechasV2';
 
 export default function NuevaCosechaPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
-  const [siembras, setSiembras] = useState<Siembra[]>([]);
-  const [isLoadingSiembras, setIsLoadingSiembras] = useState(true);
+  
+  // Usar hooks reales para obtener datos de la API
+  const { siembras, isLoading: isLoadingSiembras } = useSiembrasV2();
+  const { createCosecha } = useCosechasV2();
 
   // Obtener siembra preseleccionada desde URL
   const preSelectedSiembraId = searchParams.get('siembra');
-
-  // Cargar siembras disponibles
-  useEffect(() => {
-    const loadSiembras = async () => {
-      setIsLoadingSiembras(true);
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setSiembras(mockSiembrasDisponibles);
-      setIsLoadingSiembras(false);
-    };
-
-    loadSiembras();
-  }, []);
 
   const handleSubmit = async (data: CosechaFormData) => {
     setIsLoading(true);
     
     try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('🌾 [NuevaCosecha] Enviando datos:', data);
       
-      // En una aplicación real, esto sería una llamada a la API
-      const newCosecha = {
-        id: Date.now().toString(),
-        ...data,
-        created_at: new Date().toISOString(),
-      };
+      // Usar hook real para crear cosecha
+      const newCosecha = await createCosecha(data);
       
-      console.log('Nueva cosecha creada:', newCosecha);
+      console.log('✅ [NuevaCosecha] Cosecha creada:', newCosecha);
       
-      // También necesitamos marcar la siembra como cosechada
-      const siembraACosechar = siembras.find(s => s.id === data.siembra_id);
-      if (siembraACosechar) {
-        console.log('Marcando siembra como cosechada:', siembraACosechar.id);
-        // En una aplicación real, actualizaríamos el estado de la siembra
-      }
-      
-      // Mostrar mensaje de éxito (en una app real usaríamos toast/notification)
+      // Mostrar mensaje de éxito
       alert('Cosecha registrada exitosamente');
       
       // Redirigir a la lista de cosechas
       router.push('/cosechas');
     } catch (error) {
-      console.error('Error al crear cosecha:', error);
+      console.error('❌ [NuevaCosecha] Error al crear cosecha:', error);
       throw new Error('Error al registrar la cosecha. Inténtalo nuevamente.');
     } finally {
       setIsLoading(false);
