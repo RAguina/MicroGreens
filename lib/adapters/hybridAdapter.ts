@@ -62,10 +62,23 @@ export const getMicrogreenPlantType = (
 ): PlantType | undefined => {
   const targetLabel = MICROGREEN_LABELS[tipoMicrogreen] || tipoMicrogreen;
   
-  return plantTypes.find(pt => 
-    pt.name.toLowerCase().includes(targetLabel.toLowerCase()) ||
-    pt.name.toLowerCase().includes(`microgreen de ${tipoMicrogreen}`)
-  );
+  return plantTypes.find(pt => {
+    const plantNameLower = pt.name.toLowerCase();
+    const tipoLower = tipoMicrogreen.toLowerCase();
+    
+    // Buscar coincidencia exacta por nombre
+    if (plantNameLower === tipoLower) {
+      return true;
+    }
+    
+    // Buscar por labels hardcodeadas (compatibilidad legacy)
+    if (plantNameLower.includes(targetLabel.toLowerCase()) ||
+        plantNameLower.includes(`microgreen de ${tipoMicrogreen}`)) {
+      return true;
+    }
+    
+    return false;
+  });
 };
 
 // ==============================================
@@ -221,8 +234,20 @@ export const siembraFormDataToPlantingFormData = (
   plantTypes?: PlantType[],
   userId?: string
 ): { plantingData: any; shouldCreatePlantType?: PlantType } => {
+  console.log('🔄 [hybridAdapter] Convirtiendo datos:', {
+    tipo_microgreen: siembraData.tipo_microgreen,
+    plantTypesCount: plantTypes?.length || 0,
+    plantTypesNames: plantTypes?.map(pt => pt.name) || []
+  });
+  
   // Buscar PlantType existente
   const plantType = plantTypes ? getMicrogreenPlantType(siembraData.tipo_microgreen, plantTypes) : undefined;
+  
+  console.log('🔍 [hybridAdapter] PlantType encontrado:', plantType ? {
+    id: plantType.id,
+    name: plantType.name,
+    daysToHarvest: plantType.daysToHarvest
+  } : 'NO ENCONTRADO');
   
   let plantingData: any = {
     datePlanted: siembraData.fecha_siembra,
