@@ -92,20 +92,30 @@ export function useCosechasV2(options: UseCosechasOptions = {}) {
     setIsLoading(true);
     setError(null);
     
+    console.log('🔄 [useCosechasV2] Intentando conectar a API...');
+    console.log('🌐 [useCosechasV2] API URL:', process.env.NEXT_PUBLIC_API_URL);
+    
     try {
       let harvests: Harvest[];
       
       if (filters?.siembra_id) {
+        console.log('📡 [useCosechasV2] Obteniendo cosechas para siembra:', filters.siembra_id);
         // Obtener cosechas de una siembra específica
         harvests = await apiClient.getHarvestsByPlanting(filters.siembra_id);
       } else {
+        console.log('📡 [useCosechasV2] Obteniendo todas las cosechas...');
         // Obtener todas las cosechas con filtros
         const response = await apiClient.getHarvests(1, 100, undefined, filters?.quality);
         harvests = response.data;
       }
       
+      console.log('✅ [useCosechasV2] Respuesta de API recibida:', harvests);
+      console.log('📊 [useCosechasV2] Harvests encontrados:', harvests.length);
+      
       // Convertir harvests del backend a cosechas del frontend usando adaptador híbrido
       let cosechasFromAPI = harvestsToCosechas(harvests);
+      
+      console.log('🔄 [useCosechasV2] Conversión a cosechas:', cosechasFromAPI.length);
       
       // Aplicar filtros frontend adicionales (para compatibilidad)
       if (filters) {
@@ -121,8 +131,9 @@ export function useCosechasV2(options: UseCosechasOptions = {}) {
       
       setCosechas(cosechasFromAPI);
       setIsConnected(true);
+      console.log('🎉 [useCosechasV2] API conectada exitosamente, datos establecidos');
     } catch (err) {
-      console.error('API error, falling back to mock cosechas:', err);
+      console.error('❌ [useCosechasV2] API error, falling back to mock cosechas:', err);
       setIsConnected(false);
       
       // Fallback a mock data si la API falla
