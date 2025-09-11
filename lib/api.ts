@@ -68,7 +68,7 @@ export class MicroGreensAPI {
   private baseURL: string;
 
   constructor(baseURL?: string) {
-    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_URL || 'https://micro-greens-backend.vercel.app';
   }
 
   /**
