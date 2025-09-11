@@ -68,7 +68,7 @@ export function useCosechasV2(options: UseCosechasOptions = {}) {
           result = result.filter(c => c.siembra_id === filters.siembra_id);
         }
         if (filters.calidad_min) {
-          result = result.filter(c => c.calidad >= filters.calidad_min);
+          result = result.filter(c => c.calidad >= filters.calidad_min!);
         }
       }
       
@@ -120,7 +120,7 @@ export function useCosechasV2(options: UseCosechasOptions = {}) {
       // Aplicar filtros frontend adicionales (para compatibilidad)
       if (filters) {
         if (filters.calidad_min) {
-          cosechasFromAPI = cosechasFromAPI.filter(c => c.calidad >= filters.calidad_min);
+          cosechasFromAPI = cosechasFromAPI.filter(c => c.calidad >= filters.calidad_min!);
         }
       }
       
