@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { SiembraFormData, Siembra } from '@/lib/types';
+import { SiembraFormData, Siembra, PlantType } from '@/lib/types';
 import { 
   TIPOS_MICROGREENS, 
   MICROGREEN_LABELS, 
@@ -12,6 +12,7 @@ import {
   VALIDATION,
   ERROR_MESSAGES 
 } from '@/lib/constants';
+import { usePlantTypes } from '@/hooks/usePlantTypes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -66,6 +67,7 @@ export default function SiembraForm({
 }: SiembraFormProps) {
   const [error, setError] = useState('');
   const [expectedHarvestDate, setExpectedHarvestDate] = useState('');
+  const { plantTypes, isLoading: plantTypesLoading } = usePlantTypes({ autoload: true });
   
   const isEditing = !!siembra;
 
@@ -97,11 +99,17 @@ export default function SiembraForm({
     const [tipoMicrogreen, fechaSiembra] = watchedValues;
     
     if (tipoMicrogreen && fechaSiembra) {
-      const diasCrecimiento = TIEMPOS_CRECIMIENTO[tipoMicrogreen];
+      // Buscar PlantType correspondiente
+      const plantType = plantTypes.find(pt => 
+        pt.name.toLowerCase() === tipoMicrogreen.toLowerCase()
+      );
+      
+      // Usar daysToHarvest del PlantType o fallback a constantes
+      const diasCrecimiento = plantType?.daysToHarvest || TIEMPOS_CRECIMIENTO[tipoMicrogreen] || 7;
       const fechaEsperada = addDays(new Date(fechaSiembra), diasCrecimiento);
       setExpectedHarvestDate(format(fechaEsperada, 'yyyy-MM-dd'));
     }
-  }, [watchedValues]);
+  }, [watchedValues, plantTypes]);
 
   const onSubmitForm = async (data: SiembraFormValues) => {
     setError('');
@@ -149,11 +157,22 @@ export default function SiembraForm({
                 <SelectValue placeholder="Selecciona el tipo de microgreen" />
               </SelectTrigger>
               <SelectContent>
-                {TIPOS_MICROGREENS.map((tipo) => (
-                  <SelectItem key={tipo} value={tipo}>
-                    {MICROGREEN_LABELS[tipo]}
-                  </SelectItem>
-                ))}
+                {plantTypesLoading ? (
+                  <SelectItem value="" disabled>Cargando tipos de plantas...</SelectItem>
+                ) : plantTypes.length > 0 ? (
+                  plantTypes.map((plantType) => (
+                    <SelectItem key={plantType.id} value={plantType.name.toLowerCase()}>
+                      {plantType.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  // Fallback a tipos hardcodeados si no hay PlantTypes
+                  TIPOS_MICROGREENS.map((tipo) => (
+                    <SelectItem key={tipo} value={tipo}>
+                      {MICROGREEN_LABELS[tipo]}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             {errors.tipo_microgreen && (

@@ -6,29 +6,23 @@ import { SiembraFormData } from '@/lib/types';
 import SiembraForm from '@/components/siembras/SiembraForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useSiembrasV2 } from '@/hooks/useSiembrasV2';
 
 export default function NuevaSiembraPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { createSiembra } = useSiembrasV2();
 
   const handleSubmit = async (data: SiembraFormData) => {
     setIsLoading(true);
     
     try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('🌱 [NuevaSiembra] Enviando datos:', data);
       
-      // En una aplicación real, esto sería una llamada a la API
-      const newSiembra = {
-        id: Date.now().toString(),
-        ...data,
-        fecha_esperada_cosecha: calculateExpectedHarvestDate(data.fecha_siembra, data.tipo_microgreen),
-        estado: 'sembrado' as const,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      // Usar hook real para crear siembra
+      const newSiembra = await createSiembra(data);
       
-      console.log('Nueva siembra creada:', newSiembra);
+      console.log('✅ [NuevaSiembra] Siembra creada:', newSiembra);
       
       // Mostrar mensaje de éxito (en una app real usaríamos toast/notification)
       alert('Siembra registrada exitosamente');
@@ -36,7 +30,7 @@ export default function NuevaSiembraPage() {
       // Redirigir a la lista de siembras
       router.push('/siembras');
     } catch (error) {
-      console.error('Error al crear siembra:', error);
+      console.error('❌ [NuevaSiembra] Error al crear siembra:', error);
       throw new Error('Error al registrar la siembra. Inténtalo nuevamente.');
     } finally {
       setIsLoading(false);
@@ -45,24 +39,6 @@ export default function NuevaSiembraPage() {
 
   const handleCancel = () => {
     router.back();
-  };
-
-  // Función auxiliar para calcular fecha esperada de cosecha
-  const calculateExpectedHarvestDate = (fechaSiembra: string, tipoMicrogreen: string) => {
-    const tiemposCrecimiento: Record<string, number> = {
-      brócoli: 7,
-      rábano: 5,
-      girasol: 8,
-      guisante: 6,
-      rúcula: 7,
-      amaranto: 9,
-    };
-    
-    const dias = tiemposCrecimiento[tipoMicrogreen] || 7;
-    const fecha = new Date(fechaSiembra);
-    fecha.setDate(fecha.getDate() + dias);
-    
-    return fecha.toISOString().split('T')[0];
   };
 
   return (
