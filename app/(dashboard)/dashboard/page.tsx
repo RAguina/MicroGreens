@@ -13,21 +13,21 @@ import {
   Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useSiembrasV2 } from '@/hooks/useSiembrasV2';
-import { useCosechasV2 } from '@/hooks/useCosechasV2';
-import { MICROGREEN_LABELS, ESTADO_LABELS, ESTADO_COLORS } from '@/lib/constants';
+import { usePlantings } from '@/hooks/usePlantings';
+import { useHarvests } from '@/hooks/useHarvests';
+import { STATUS_LABELS, STATUS_COLORS, QUALITY_LABELS } from '@/lib/constants';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export default function DashboardPage() {
-  // Usar hooks V2 para datos reales de la API
-  const { siembras, getStats: getSiembrasStats, getUpcomingHarvests } = useSiembrasV2();
-  const { cosechas, getStats: getCosechasStats } = useCosechasV2();
+  // Usar hooks v2.0 para datos reales de la API
+  const { plantings, getStats: getPlantingsStats, getUpcomingHarvests } = usePlantings();
+  const { harvests, getStats: getHarvestsStats } = useHarvests();
   
   const [dashboardData, setDashboardData] = useState({
-    siembrasStats: { sembradas: 0, creciendo: 0, listas: 0, cosechadas: 0 },
-    cosechasStats: { total: 0, pesoTotal: 0, cosechasEsteMes: 0, calidadPromedio: 0 },
+    plantingsStats: { planted: 0, growing: 0, readyToHarvest: 0, harvested: 0 },
+    harvestsStats: { total: 0, totalWeight: 0, thisMonth: { count: 0 }, averageQuality: 0 },
     proximasCosechas: []
   });
 

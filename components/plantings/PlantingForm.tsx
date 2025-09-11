@@ -21,7 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { 
   Loader2, 
-  Seedling, 
+  Sprout, 
   Calendar,
   MapPin,
   Info
@@ -189,7 +189,7 @@ export default function PlantingForm({
       <CardHeader>
         <div className="flex items-center space-x-2">
           <div className="p-2 bg-green-100 rounded-lg">
-            <Seedling className="h-5 w-5 text-green-600" />
+            <Sprout className="h-5 w-5 text-green-600" />
           </div>
           <div>
             <CardTitle className="text-xl font-bold text-gray-900">
@@ -467,7 +467,7 @@ export default function PlantingForm({
                 </>
               ) : (
                 <>
-                  <Seedling className="mr-2 h-4 w-4" />
+                  <Sprout className="mr-2 h-4 w-4" />
                   {isEditing ? 'Actualizar Siembra' : 'Registrar Siembra'}
                 </>
               )}
