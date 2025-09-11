@@ -25,24 +25,40 @@ export class AuthError extends Error {
  * Cliente HTTP con soporte para cookies JWT HttpOnly
  */
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    credentials: 'include', // CRÍTICO para JWT cookies
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers
+  console.log(`🌐 [Auth API] ${options.method || 'GET'} ${endpoint}`);
+  
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      credentials: 'include', // CRÍTICO para JWT cookies
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    });
+
+    console.log(`📡 [Auth API] Response: ${response.status} ${response.statusText}`);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+      const error = new AuthError(
+        errorData.error || `HTTP ${response.status}: ${response.statusText}`,
+        response.status
+      );
+      console.error('❌ [Auth API] Error:', error.message);
+      throw error;
     }
-  });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
-    throw new AuthError(
-      errorData.error || `HTTP ${response.status}: ${response.statusText}`,
-      response.status
-    );
+    const data = await response.json();
+    console.log('✅ [Auth API] Success');
+    return data;
+  } catch (error) {
+    if (error instanceof AuthError) {
+      throw error;
+    }
+    console.error('❌ [Auth API] Network/Parse error:', error);
+    throw new AuthError('Error de conexión con el servidor');
   }
-
-  return response.json();
 };
 
 /**

@@ -22,42 +22,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Verificar autenticación al cargar - usar backend real
   useEffect(() => {
+    let mounted = true;
+    
     const initAuth = async () => {
       try {
+        console.log('🔍 [AuthProvider] Checking authentication status...');
+        
         // Intentar obtener usuario actual del backend (verifica cookie JWT)
         const currentUser = await realAuth.getCurrentUser();
         
+        if (!mounted) return; // Prevent state update if component unmounted
+        
         if (currentUser) {
+          console.log('✅ [AuthProvider] User authenticated:', currentUser.email);
           setUser(currentUser);
           authStorage.setUser(currentUser); // Guardar en localStorage para UX
         } else {
+          console.log('❌ [AuthProvider] No authenticated user found');
           // No hay sesión activa, limpiar localStorage
           authStorage.removeUser();
           setUser(null);
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
-        authStorage.removeUser();
-        setUser(null);
+        console.error('❌ [AuthProvider] Error initializing auth:', error);
+        if (mounted) {
+          authStorage.removeUser();
+          setUser(null);
+        }
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          console.log('✅ [AuthProvider] Auth initialization complete');
+          setIsLoading(false);
+        }
       }
     };
 
     initAuth();
+    
+    // Cleanup function
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
     try {
+      console.log('🔐 [AuthProvider] Attempting login for:', credentials.email);
       setIsLoading(true);
       
       const { user: loggedInUser } = await realAuth.login(credentials);
+      
+      console.log('✅ [AuthProvider] Login successful for:', loggedInUser.email);
       
       // Actualizar estado local
       setUser(loggedInUser);
       authStorage.setUser(loggedInUser);
       
     } catch (error) {
+      console.error('❌ [AuthProvider] Login failed:', error);
+      
       // Re-lanzar error para que el componente pueda manejarlo
       if (error instanceof AuthError) {
         throw error;
