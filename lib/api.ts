@@ -1,25 +1,23 @@
 /**
- * 🌱 MicroGreens API Client
+ * 🌱 MicroGreens API Client - Modelo Híbrido v2.0
  * 
  * Cliente HTTP para conectar con el backend de MicroGreens.
- * Basado en API_REFERENCE.md para producción.
+ * Soporte completo para PlantTypes, Plantings y Harvests.
  */
 
-// Tipos del backend (basados en schema de Prisma)
-export interface BackendPlanting {
-  id: string;
-  plantName: string;
-  datePlanted: string; // API devuelve como string ISO
-  expectedHarvest?: string;
-  domeDate?: string;
-  lightDate?: string;
-  quantity?: number; // Int? en Prisma, puede ser null
-  yield?: number; // Float? en Prisma, puede ser null
-  notes?: string;
-  createdAt: string; // API devuelve como string ISO
-  updatedAt: string; // API devuelve como string ISO
-  deletedAt?: string;
-  userId: string; // Campo requerido en Prisma
+import { 
+  PlantType, 
+  PlantTypeFormData,
+  Planting, 
+  PlantingFormData,
+  Harvest, 
+  HarvestFormData,
+  PaginatedResponse 
+} from './types';
+
+// Tipos del backend (actualizados para Modelo Híbrido v2.0)
+export interface BackendPlanting extends Planting {
+  // Modelo híbrido mantiene compatibilidad con campos legacy
 }
 
 export interface BackendUser {
@@ -205,38 +203,20 @@ export class MicroGreensAPI {
   }
 
   /**
-   * Crear nueva siembra
+   * Crear nueva siembra (actualizado para Modelo Híbrido v2.0)
    */
-  async createPlanting(data: {
-    plantName: string;
-    datePlanted: string;
-    expectedHarvest?: string;
-    domeDate?: string;
-    lightDate?: string;
-    quantity?: number;
-    yield?: number;
-    notes?: string;
-  }) {
-    return this.request<BackendPlanting>('/api/plantings', {
+  async createPlanting(data: PlantingFormData) {
+    return this.request<Planting>('/api/plantings', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   /**
-   * Actualizar siembra existente
+   * Actualizar siembra existente (actualizado para Modelo Híbrido v2.0)
    */
-  async updatePlanting(id: string, updates: Partial<{
-    plantName: string;
-    datePlanted: string;
-    expectedHarvest: string;
-    domeDate: string;
-    lightDate: string;
-    quantity: number;
-    yield: number;
-    notes: string;
-  }>) {
-    return this.request<BackendPlanting>(`/api/plantings/${id}`, {
+  async updatePlanting(id: string, updates: Partial<PlantingFormData>) {
+    return this.request<Planting>(`/api/plantings/${id}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
     });
@@ -274,6 +254,119 @@ export class MicroGreensAPI {
       baseURL: this.baseURL,
       environment: process.env.NODE_ENV,
     };
+  }
+
+  // ==============================================
+  // 🏷️ PLANT TYPES METHODS (NUEVO v2.0)
+  // ==============================================
+
+  /**
+   * Obtener catálogo de tipos de plantas
+   */
+  async getPlantTypes(category?: string, difficulty?: string) {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (difficulty) params.append('difficulty', difficulty);
+    
+    return this.request<PlantType[]>(`/api/plant-types?${params}`);
+  }
+
+  /**
+   * Obtener tipo de planta por ID
+   */
+  async getPlantType(id: string) {
+    return this.request<PlantType>(`/api/plant-types/${id}`);
+  }
+
+  /**
+   * Crear nuevo tipo de planta (solo Admin)
+   */
+  async createPlantType(data: PlantTypeFormData) {
+    return this.request<PlantType>('/api/plant-types', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Actualizar tipo de planta (solo Admin)
+   */
+  async updatePlantType(id: string, updates: Partial<PlantTypeFormData>) {
+    return this.request<PlantType>(`/api/plant-types/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  /**
+   * Eliminar tipo de planta (solo Admin)
+   */
+  async deletePlantType(id: string) {
+    return this.request<{ message: string }>(`/api/plant-types/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ==============================================
+  // 🌾 HARVESTS METHODS (NUEVO v2.0)
+  // ==============================================
+
+  /**
+   * Obtener lista paginada de cosechas
+   */
+  async getHarvests(page = 1, limit = 10, plantingId?: string, quality?: string) {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    if (plantingId) params.append('plantingId', plantingId);
+    if (quality) params.append('quality', quality);
+
+    return this.request<PaginatedResponse<Harvest>>(`/api/harvests?${params}`);
+  }
+
+  /**
+   * Obtener cosechas de una siembra específica
+   */
+  async getHarvestsByPlanting(plantingId: string) {
+    return this.request<Harvest[]>(`/api/harvests/planting/${plantingId}`);
+  }
+
+  /**
+   * Obtener cosecha por ID
+   */
+  async getHarvest(id: string) {
+    return this.request<Harvest>(`/api/harvests/${id}`);
+  }
+
+  /**
+   * Crear nueva cosecha
+   */
+  async createHarvest(data: HarvestFormData) {
+    return this.request<Harvest>('/api/harvests', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Actualizar cosecha existente
+   */
+  async updateHarvest(id: string, updates: Partial<HarvestFormData>) {
+    return this.request<Harvest>(`/api/harvests/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  /**
+   * Eliminar cosecha
+   */
+  async deleteHarvest(id: string) {
+    return this.request<{ message: string }>(`/api/harvests/${id}`, {
+      method: 'DELETE',
+    });
   }
 }
 
