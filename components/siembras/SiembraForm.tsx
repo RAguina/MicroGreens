@@ -299,6 +299,3 @@ export default function SiembraForm({
     </Card>
   );
 }
-
-// Necesitamos importar React para useEffect
-import React from 'react';
