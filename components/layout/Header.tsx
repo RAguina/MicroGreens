@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/providers/AuthProvider';
+import { useSidebar } from '@/providers/SidebarProvider';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -11,10 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Leaf, LogOut, User } from 'lucide-react';
+import { Leaf, LogOut, User, Menu } from 'lucide-react';
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const { toggle, isMobile } = useSidebar();
 
   const handleLogout = async () => {
     await logout();
@@ -24,8 +26,21 @@ export default function Header() {
     <header className="bg-white border-b border-gray-200 shadow-sm">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo y título */}
+          {/* Botón hamburguesa y Logo */}
           <div className="flex items-center space-x-3">
+            {/* Botón hamburguesa solo en móvil */}
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggle}
+                className="p-2 lg:hidden"
+                aria-label="Abrir menú"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
+            
             <div className="p-2 bg-green-500 rounded-lg">
               <Leaf className="h-6 w-6 text-white" />
             </div>

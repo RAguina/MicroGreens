@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/providers/AuthProvider';
+import { SidebarProvider } from '@/providers/SidebarProvider';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Header from '@/components/layout/Header';
@@ -36,23 +37,25 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar />
-      
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+    <SidebarProvider>
+      <div className="flex h-screen bg-gray-50">
+        {/* Sidebar */}
+        <Sidebar />
         
-        {/* Page content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto">
-          <div className="container mx-auto px-6 py-8">
-            {children}
-          </div>
-        </main>
-        
-        <Footer />
+        {/* Main content */}
+        <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+          <Header />
+          
+          {/* Page content */}
+          <main className="flex-1 overflow-x-hidden overflow-y-auto">
+            <div className="container mx-auto px-4 lg:px-6 py-8">
+              {children}
+            </div>
+          </main>
+          
+          <Footer />
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
