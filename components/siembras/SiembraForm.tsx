@@ -166,7 +166,7 @@ export default function SiembraForm({
               </SelectTrigger>
               <SelectContent>
                 {plantTypesLoading ? (
-                  <SelectItem value="" disabled>Cargando tipos de plantas...</SelectItem>
+                  <SelectItem value="loading" disabled>Cargando tipos de plantas...</SelectItem>
                 ) : plantTypes.length > 0 ? (
                   plantTypes.map((plantType) => (
                     <SelectItem key={plantType.id} value={plantType.name.toLowerCase()}>
