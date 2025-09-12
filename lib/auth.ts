@@ -25,19 +25,27 @@ export class AuthError extends Error {
  * Cliente HTTP con soporte para cookies JWT HttpOnly
  */
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-  console.log(`🌐 [Auth API] ${options.method || 'GET'} ${endpoint}`);
+  const fullUrl = `${API_BASE}${endpoint}`;
+  console.log(`🌐 [Auth API] ${options.method || 'GET'} ${fullUrl}`);
+  console.log(`📤 [Auth API] Request body:`, options.body);
+  console.log(`📤 [Auth API] Request headers:`, options.headers);
   
   try {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    const requestConfig = {
       ...options,
-      credentials: 'include', // CRÍTICO para JWT cookies
+      credentials: 'include' as RequestCredentials, // CRÍTICO para JWT cookies
       headers: {
         'Content-Type': 'application/json',
         ...options.headers
       }
-    });
+    };
+    
+    console.log(`📤 [Auth API] Full request config:`, requestConfig);
+    
+    const response = await fetch(fullUrl, requestConfig);
 
     console.log(`📡 [Auth API] Response: ${response.status} ${response.statusText}`);
+    console.log(`📡 [Auth API] Response headers:`, Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
@@ -45,15 +53,16 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
         errorData.error || `HTTP ${response.status}: ${response.statusText}`,
         response.status
       );
-      console.error('❌ [Auth API] Error:', error.message);
+      console.error('❌ [Auth API] Error response:', errorData);
       throw error;
     }
 
     const data = await response.json();
-    console.log('✅ [Auth API] Success');
+    console.log('✅ [Auth API] Success response:', data);
     return data;
   } catch (error) {
     if (error instanceof AuthError) {
+      console.error('❌ [Auth API] Auth Error:', error.message, error.statusCode);
       throw error;
     }
     console.error('❌ [Auth API] Network/Parse error:', error);
