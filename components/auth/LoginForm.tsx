@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Leaf } from 'lucide-react';
 
 export default function LoginForm() {
+  console.log('🚀 [LoginForm] Component initialized');
   const { login, isLoading } = useAuth();
   const [credentials, setCredentials] = useState({
     email: '',
@@ -18,17 +19,21 @@ export default function LoginForm() {
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('🚀 [LoginForm] handleSubmit called');
     e.preventDefault();
     setError('');
     
     try {
+      console.log('🚀 [LoginForm] About to call login with:', credentials);
       await login(credentials);
     } catch (err) {
+      console.error('🚀 [LoginForm] Login error:', err);
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
     }
   };
 
   const handleDemoLogin = async () => {
+    console.log('🚀 [LoginForm] Demo login clicked!');
     const demoCredentials = {
       email: 'demo@microgreens.com',
       password: 'demo123'
@@ -38,8 +43,10 @@ export default function LoginForm() {
     setError('');
     
     try {
+      console.log('🚀 [LoginForm] About to call demo login');
       await login(demoCredentials);
     } catch (err) {
+      console.error('🚀 [LoginForm] Demo login error:', err);
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
     }
   };
