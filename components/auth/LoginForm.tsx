@@ -112,6 +112,7 @@ export default function LoginForm() {
               type="submit" 
               className="w-full bg-green-600 hover:bg-green-700"
               disabled={isLoading}
+              onClick={() => console.log('🚀🚀🚀 [LoginForm] INICIAR SESIÓN BUTTON CLICKED!!!')}
             >
               {isLoading ? (
                 <>
@@ -132,7 +133,10 @@ export default function LoginForm() {
               type="button"
               variant="outline" 
               className="w-full"
-              onClick={handleDemoLogin}
+              onClick={() => {
+                console.log('🚀🚀🚀 [LoginForm] VER DEMO BUTTON CLICKED!!!');
+                handleDemoLogin();
+              }}
               disabled={isLoading}
             >
               Usar credenciales demo
