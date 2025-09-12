@@ -1,30 +1,36 @@
-# 🌱 MicroGreens - Clean Restart
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-> **Este proyecto fue completamente limpiado para empezar con arquitectura nueva.**
+## Getting Started
 
-## 📋 **Para el nuevo Claude Code:**
+First, run the development server:
 
-### **🎯 Objetivo:**
-Crear aplicación Next.js + TypeScript para gestión de microgreens con auth JWT real.
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-### **🔗 Backend Ready:**
-- **Endpoint:** `https://micro-greens-backend.vercel.app`
-- **Demo user:** `demo@microgreens.com` / `demo123`
-- **Auth endpoints:** `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### **📚 Documentación disponible:**
-1. **`CLEAN_PROJECT_GUIDE.md`** - Guía paso a paso para setup limpio
-2. **`AUTH-BACKEND.md`** - Instrucciones de auth del backend  
-3. **`API_FRONTEND_CONTRACT.md`** - Contrato API completo
-4. **`API_DOCUMENTATION.md`** - Docs del backend
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### **✨ Fresh Start:**
-- ❌ Zero código corrupto o mocks
-- ❌ Zero configuraciones problemáticas  
-- ✅ Solo documentación útil
-- ✅ Backend funcionando
-- ✅ Guías completas
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
----
+## Learn More
 
-**Sigue `CLEAN_PROJECT_GUIDE.md` para setup en 30 minutos.**
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
