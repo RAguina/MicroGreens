@@ -1,9 +1,7 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
-
 export default function AnalyticsPage() {
-  const { user } = useAuth();
+  // Future: import { useAuth } from '@/contexts/AuthContext'; for user-specific analytics
 
   return (
     <div className="space-y-6">

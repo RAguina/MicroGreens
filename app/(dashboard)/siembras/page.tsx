@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { plantingsAPI, Planting, PlantingStatus } from '@/lib/plantings';
 
 export default function SiembrasPage() {
-  const { user } = useAuth();
+  // Future: import { useAuth } from '@/contexts/AuthContext'; for user filtering
   const [plantings, setPlantings] = useState<Planting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -24,7 +24,7 @@ export interface Planting {
   trayNumber?: string;
 
   // Relations
-  harvests?: any[];
+  harvests?: unknown[];
   _count?: {
     harvests: number;
   };
