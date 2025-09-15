@@ -2,15 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import { plantingsAPI, Planting, PlantingStatus } from '@/lib/plantings';
+import CreatePlantingForm from '@/components/siembras/CreatePlantingForm';
+import EditPlantingForm from '@/components/siembras/EditPlantingForm';
+import DeletePlantingConfirm from '@/components/siembras/DeletePlantingConfirm';
+
+type ViewMode = 'cards' | 'table';
 
 export default function SiembrasPage() {
   // Future: import { useAuth } from '@/contexts/AuthContext'; for user filtering
   const [plantings, setPlantings] = useState<Planting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingPlanting, setEditingPlanting] = useState<Planting | null>(null);
+  const [deletingPlanting, setDeletingPlanting] = useState<Planting | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
 
   useEffect(() => {
     loadPlantings();
+    // Load view preference from localStorage
+    const savedViewMode = localStorage.getItem('plantings-view-mode') as ViewMode;
+    if (savedViewMode && (savedViewMode === 'cards' || savedViewMode === 'table')) {
+      setViewMode(savedViewMode);
+    }
   }, []);
 
   const loadPlantings = async () => {
@@ -59,6 +73,11 @@ export default function SiembrasPage() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
+  const handleViewModeChange = (newViewMode: ViewMode) => {
+    setViewMode(newViewMode);
+    localStorage.setItem('plantings-view-mode', newViewMode);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -74,12 +93,36 @@ export default function SiembrasPage() {
           <h1 className="text-3xl font-bold text-gray-900">🌱 Siembras</h1>
           <p className="text-gray-600">Gestiona tus cultivos de microverdes</p>
         </div>
-        <button
-          onClick={() => alert('Funcionalidad próximamente disponible')}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-        >
-          + Nueva Siembra
-        </button>
+        <div className="flex items-center space-x-4">
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => handleViewModeChange('cards')}
+              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'cards'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              📋 Cards
+            </button>
+            <button
+              onClick={() => handleViewModeChange('table')}
+              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'table'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              📊 Tabla
+            </button>
+          </div>
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+          >
+            + Nueva Siembra
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -110,13 +153,13 @@ export default function SiembrasPage() {
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No hay siembras registradas</h3>
                   <p className="text-gray-600 mb-4">Comienza registrando tu primera siembra</p>
                   <button
-                    onClick={() => alert('Funcionalidad próximamente disponible')}
+                    onClick={() => setShowCreateForm(true)}
                     className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
                   >
                     + Nueva Siembra
                   </button>
                 </div>
-              ) : (
+              ) : viewMode === 'cards' ? (
                 <div className="space-y-4">
                   {plantings.map((planting) => (
                     <div key={planting.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
@@ -160,21 +203,100 @@ export default function SiembrasPage() {
                         </div>
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => alert(`Ver detalles de siembra ${planting.id}`)}
+                            onClick={() => setEditingPlanting(planting)}
                             className="text-blue-600 hover:text-blue-800 text-sm"
                           >
-                            Ver
+                            Editar
                           </button>
                           <button
-                            onClick={() => alert(`Editar siembra ${planting.id}`)}
-                            className="text-green-600 hover:text-green-800 text-sm"
+                            onClick={() => setDeletingPlanting(planting)}
+                            className="text-red-600 hover:text-red-800 text-sm"
                           >
-                            Editar
+                            Eliminar
                           </button>
                         </div>
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Planta
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Estado
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Fecha Siembra
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Días
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Bandeja
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Cantidad
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {plantings.map((planting) => (
+                        <tr key={planting.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {planting.plantName || 'Sin nombre'}
+                            </div>
+                            {planting.notes && (
+                              <div className="text-sm text-gray-500 truncate max-w-xs">
+                                {planting.notes}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(planting.status)}`}>
+                              {getStatusText(planting.status)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatDate(planting.datePlanted)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {getDaysFromPlanting(planting.datePlanted)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {planting.trayNumber || '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {planting.quantity || '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => setEditingPlanting(planting)}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                Editar
+                              </button>
+                              <button
+                                onClick={() => setDeletingPlanting(planting)}
+                                className="text-red-600 hover:text-red-800"
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -241,6 +363,41 @@ export default function SiembrasPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Planting Form Modal */}
+      {showCreateForm && (
+        <CreatePlantingForm
+          onSuccess={() => {
+            setShowCreateForm(false);
+            loadPlantings(); // Reload the list
+          }}
+          onCancel={() => setShowCreateForm(false)}
+        />
+      )}
+
+      {/* Edit Planting Form Modal */}
+      {editingPlanting && (
+        <EditPlantingForm
+          planting={editingPlanting}
+          onSuccess={() => {
+            setEditingPlanting(null);
+            loadPlantings(); // Reload the list
+          }}
+          onCancel={() => setEditingPlanting(null)}
+        />
+      )}
+
+      {/* Delete Planting Confirmation Modal */}
+      {deletingPlanting && (
+        <DeletePlantingConfirm
+          planting={deletingPlanting}
+          onSuccess={() => {
+            setDeletingPlanting(null);
+            loadPlantings(); // Reload the list
+          }}
+          onCancel={() => setDeletingPlanting(null)}
+        />
+      )}
     </div>
   );
 }
