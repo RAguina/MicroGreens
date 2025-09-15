@@ -15,9 +15,8 @@ export interface LoginCredentials {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://micro-greens-backend.vercel.app';
 
 export const authAPI = {
-  async login(credentials: LoginCredentials): Promise<User> {
+  async login(credentials: LoginCredentials): Promise<{ user: User; accessToken: string }> {
     console.log('Auth: Making login API call to:', `${API_BASE}/api/auth/login`);
-    console.log('Auth: Current origin:', window.location.origin);
 
     const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/auth/login`, {
       method: 'POST',
@@ -48,32 +47,55 @@ export const authAPI = {
       console.log('Auth: Cookies after login:', document.cookie);
     }, 100);
 
-    return data.user;
+    return {
+      user: data.user,
+      accessToken: data.accessToken || data.token || ''
+    };
+  },
+
+  async refreshToken(): Promise<{ user: User; accessToken: string } | null> {
+    try {
+      console.log('Auth: Refreshing token from:', `${API_BASE}/api/auth/refresh`);
+
+      const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/auth/refresh`, {
+        method: 'POST'
+      });
+
+      console.log('Auth: Refresh response status:', response.status);
+      console.log('Auth: Refresh response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Auth: Refresh error response:', errorText);
+        return null;
+      }
+
+      const data = await response.json();
+      console.log('Auth: Refresh successful, data:', data);
+
+      return {
+        user: data.user,
+        accessToken: data.accessToken || data.token || ''
+      };
+    } catch (error) {
+      console.error('Auth: Refresh error caught:', error);
+      return null;
+    }
   },
 
   async getCurrentUser(): Promise<User | null> {
     try {
       console.log('Auth: Getting current user from:', `${API_BASE}/api/auth/me`);
-      console.log('Auth: Current origin:', window.location.origin);
-      console.log('Auth: Document cookies:', document.cookie);
 
-      // GET request doesn't need CSRF token
-      const response = await fetch(`${API_BASE}/api/auth/me`, {
-        credentials: 'include'
-      });
-
-      console.log('Auth: getCurrentUser response status:', response.status);
-      console.log('Auth: getCurrentUser response headers:', Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log('Auth: getCurrentUser error response:', errorText);
+      // Try refresh first to get valid access token
+      const refreshResult = await this.refreshToken();
+      if (!refreshResult) {
+        console.log('Auth: Refresh failed, user not authenticated');
         return null;
       }
 
-      const data = await response.json();
-      console.log('Auth: getCurrentUser success, data:', data);
-      return data.user;
+      console.log('Auth: Refresh successful, user:', refreshResult.user);
+      return refreshResult.user;
     } catch (error) {
       console.error('Auth: getCurrentUser error caught:', error);
       return null;

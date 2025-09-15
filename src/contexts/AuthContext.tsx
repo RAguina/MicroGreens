@@ -7,6 +7,7 @@ import { csrfAPI } from '@/lib/csrf';
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
+  accessToken: string | null;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -15,11 +16,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize CSRF token and check auth on mount
+  // Initialize CSRF token and try silent refresh on mount
   useEffect(() => {
-    console.log('AuthProvider mounted - initializing CSRF and checking current user');
+    console.log('AuthProvider mounted - initializing CSRF and attempting silent refresh');
 
     const initializeApp = async () => {
       try {
@@ -28,11 +30,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await csrfAPI.getCSRFToken();
         console.log('AuthProvider: CSRF token obtained');
 
-        // Then check current user
-        console.log('AuthProvider: Checking current user...');
-        const userData = await authAPI.getCurrentUser();
-        console.log('AuthProvider: Current user result:', userData);
-        setUser(userData);
+        // Then try silent refresh to restore session
+        console.log('AuthProvider: Attempting silent refresh...');
+        const result = await authAPI.refreshToken();
+
+        if (result) {
+          console.log('AuthProvider: Silent refresh successful:', result.user);
+          setUser(result.user);
+          setAccessToken(result.accessToken);
+        } else {
+          console.log('AuthProvider: No valid session found');
+        }
       } catch (error) {
         console.error('AuthProvider: Error during initialization:', error);
       } finally {
@@ -45,27 +53,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (credentials: LoginCredentials) => {
     console.log('AuthContext: logging in user');
-    const userData = await authAPI.login(credentials);
-    console.log('AuthContext: login successful, setting user:', userData);
-    setUser(userData);
+    const result = await authAPI.login(credentials);
+    console.log('AuthContext: login successful, setting user and token:', result);
+    setUser(result.user);
+    setAccessToken(result.accessToken);
     console.log('AuthContext: user state updated');
-    
-    // Verificar inmediatamente después del login
-    setTimeout(async () => {
-      console.log('AuthContext: Checking user persistence after login...');
-      const currentUser = await authAPI.getCurrentUser();
-      console.log('AuthContext: getCurrentUser after login returned:', currentUser);
-    }, 1000);
   };
 
   const logout = async () => {
     console.log('AuthContext: logging out user');
     await authAPI.logout();
     setUser(null);
+    setAccessToken(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

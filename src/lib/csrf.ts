@@ -5,17 +5,20 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://micro-greens-backen
 
 export const csrfAPI = {
   async getCSRFToken(): Promise<string> {
-    console.log('CSRF: Getting token from /health endpoint');
+    console.log('CSRF: Getting token from /api/auth/csrf endpoint');
 
-    const response = await fetch(`${API_BASE}/health`, {
+    const response = await fetch(`${API_BASE}/api/auth/csrf`, {
       credentials: 'include'
     });
+
+    console.log('CSRF: Response headers:', Object.fromEntries(response.headers.entries()));
 
     const token = response.headers.get('X-CSRF-Token');
     console.log('CSRF: Token received:', token ? 'YES' : 'NO');
 
     if (!token) {
-      throw new Error('CSRF token not found in response headers');
+      console.error('CSRF: No token in headers. Available headers:', [...response.headers.keys()]);
+      throw new Error('CSRF token not found in response headers - backend might need Access-Control-Expose-Headers');
     }
 
     csrfToken = token;
