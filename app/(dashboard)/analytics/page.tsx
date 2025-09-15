@@ -2,14 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { analyticsAPI, AnalyticsMetrics } from '@/lib/analytics';
+import { plantingsAPI, Planting } from '@/lib/plantings';
+import ReportGeneratorModal from '@/components/reports/ReportGeneratorModal';
+import { ReportConfig } from '@/types/reports';
+import { ReportsService } from '@/lib/reports';
 
 export default function AnalyticsPage() {
   const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [plantings, setPlantings] = useState<Planting[]>([]);
 
   useEffect(() => {
     loadMetrics();
+    loadPlantings();
   }, []);
 
   const loadMetrics = async () => {
@@ -20,6 +27,30 @@ export default function AnalyticsPage() {
       setMetrics(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error cargando métricas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadPlantings = async () => {
+    try {
+      const data = await plantingsAPI.getPlantings();
+      setPlantings(data);
+    } catch (err) {
+      // Silent fail for plantings load
+    }
+  };
+
+  const handleGenerateReport = async (config: ReportConfig) => {
+    try {
+      setLoading(true);
+      const report = await ReportsService.generateAndDownloadReport(plantings, config);
+
+      // Show success message
+      alert(`Reporte generado exitosamente: ${report.fileName}`);
+    } catch (error) {
+      console.error('Error generando reporte:', error);
+      alert('Error al generar el reporte. Por favor intenta nuevamente.');
     } finally {
       setLoading(false);
     }
@@ -253,19 +284,19 @@ export default function AnalyticsPage() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones Disponibles</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
-            onClick={() => alert('Funcionalidad próximamente disponible')}
+            onClick={() => setShowReportModal(true)}
             className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left"
           >
             <div className="text-lg font-medium text-gray-900 mb-1">📅 Reporte Mensual</div>
-            <p className="text-sm text-gray-600">Resumen completo del mes</p>
+            <p className="text-sm text-gray-600">Resumen completo del período</p>
           </button>
 
           <button
-            onClick={() => alert('Funcionalidad próximamente disponible')}
+            onClick={() => setShowReportModal(true)}
             className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left"
           >
             <div className="text-lg font-medium text-gray-900 mb-1">📊 Exportar Datos</div>
-            <p className="text-sm text-gray-600">Descargar datos en CSV</p>
+            <p className="text-sm text-gray-600">Configurar y descargar reportes</p>
           </button>
 
           <button
@@ -277,6 +308,14 @@ export default function AnalyticsPage() {
           </button>
         </div>
       </div>
+
+      {/* Report Generator Modal */}
+      <ReportGeneratorModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        plantings={plantings}
+        onGenerate={handleGenerateReport}
+      />
     </div>
   );
 }

@@ -1,9 +1,26 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import ReportGeneratorModal from '@/components/reports/ReportGeneratorModal';
+import { ReportConfig } from '@/types/reports';
+import { ReportsService } from '@/lib/reports';
+import { Planting } from '@/lib/plantings';
 
 export default function ConfiguracionPage() {
   const { user } = useAuth();
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [plantings, setPlantings] = useState<Planting[]>([]);
+
+  const handleGenerateReport = async (config: ReportConfig) => {
+    try {
+      const report = await ReportsService.generateAndDownloadReport(plantings, config);
+      alert(`Reporte generado exitosamente: ${report.fileName}`);
+    } catch (error) {
+      console.error('Error generando reporte:', error);
+      alert('Error al generar el reporte. Por favor intenta nuevamente.');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -133,7 +150,7 @@ export default function ConfiguracionPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones</h3>
             <div className="space-y-2">
               <button
-                onClick={() => alert('Funcionalidad próximamente disponible')}
+                onClick={() => setShowReportModal(true)}
                 className="w-full text-left p-2 rounded hover:bg-gray-50 text-sm"
               >
                 📊 Exportar datos
@@ -169,6 +186,14 @@ export default function ConfiguracionPage() {
           </div>
         </div>
       </div>
+
+      {/* Report Generator Modal */}
+      <ReportGeneratorModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        plantings={plantings}
+        onGenerate={handleGenerateReport}
+      />
     </div>
   );
 }
