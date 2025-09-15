@@ -44,12 +44,9 @@ export default function CreatePlantingForm({ onSuccess, onCancel, initialDate }:
         notes: formData.notes || undefined,
       };
 
-      console.log('Creating planting with data:', cleanData);
       await plantingsAPI.createPlanting(cleanData);
-      console.log('Planting created successfully');
       onSuccess();
     } catch (err) {
-      console.error('Error creating planting:', err);
       setError(err instanceof Error ? err.message : 'Error al crear la siembra');
     } finally {
       setLoading(false);

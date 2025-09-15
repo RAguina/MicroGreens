@@ -55,7 +55,6 @@ export const plantingsAPI = {
     if (params?.status) searchParams.set('status', params.status);
 
     const url = `${API_BASE}/api/plantings${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
-    console.log('Plantings: Fetching from:', url);
 
     // GET request doesn't need CSRF token
     const response = await fetch(url, {
@@ -67,13 +66,10 @@ export const plantingsAPI = {
     }
 
     const data = await response.json();
-    console.log('Plantings: Data received:', data);
     return data.data || data; // Handle both paginated and direct responses
   },
 
   async createPlanting(planting: PlantingFormData): Promise<Planting> {
-    console.log('Plantings: Creating planting:', planting);
-
     const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/plantings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -82,7 +78,6 @@ export const plantingsAPI = {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.log('Plantings: Create error response:', errorText);
 
       try {
         const error = JSON.parse(errorText);
@@ -96,8 +91,6 @@ export const plantingsAPI = {
   },
 
   async updatePlanting(id: string, updates: Partial<PlantingFormData>): Promise<Planting> {
-    console.log('Plantings: Updating planting:', id, updates);
-
     const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/plantings/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -106,7 +99,6 @@ export const plantingsAPI = {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.log('Plantings: Update error response:', errorText);
 
       try {
         const error = JSON.parse(errorText);
@@ -120,15 +112,12 @@ export const plantingsAPI = {
   },
 
   async deletePlanting(id: string): Promise<{ success: boolean }> {
-    console.log('Plantings: Deleting planting:', id);
-
     const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/plantings/${id}`, {
       method: 'DELETE'
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.log('Plantings: Delete error response:', errorText);
 
       try {
         const error = JSON.parse(errorText);

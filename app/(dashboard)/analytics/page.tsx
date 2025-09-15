@@ -17,10 +17,8 @@ export default function AnalyticsPage() {
       setLoading(true);
       setError(null);
       const data = await analyticsAPI.getMetrics();
-      console.log('Analytics: Metrics loaded:', data);
       setMetrics(data);
     } catch (err) {
-      console.error('Analytics: Error loading metrics:', err);
       setError(err instanceof Error ? err.message : 'Error cargando métricas');
     } finally {
       setLoading(false);

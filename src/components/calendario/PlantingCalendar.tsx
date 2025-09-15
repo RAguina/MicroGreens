@@ -37,7 +37,6 @@ export default function PlantingCalendar({ onSelectEvent, onSelectSlot }: Planti
       const data = await plantingsAPI.getPlantings();
       setPlantings(data);
     } catch (err) {
-      console.error('Error loading plantings for calendar:', err);
       setError(err instanceof Error ? err.message : 'Error cargando siembras');
     } finally {
       setLoading(false);

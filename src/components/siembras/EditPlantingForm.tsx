@@ -44,12 +44,9 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
         notes: formData.notes || undefined,
       };
 
-      console.log('Updating planting with data:', cleanData);
       await plantingsAPI.updatePlanting(planting.id, cleanData);
-      console.log('Planting updated successfully');
       onSuccess();
     } catch (err) {
-      console.error('Error updating planting:', err);
       setError(err instanceof Error ? err.message : 'Error al actualizar la siembra');
     } finally {
       setLoading(false);

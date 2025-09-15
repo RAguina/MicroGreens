@@ -32,10 +32,8 @@ export default function SiembrasPage() {
       setLoading(true);
       setError(null);
       const data = await plantingsAPI.getPlantings();
-      console.log('Loaded plantings:', data);
       setPlantings(data);
     } catch (err) {
-      console.error('Error loading plantings:', err);
       setError(err instanceof Error ? err.message : 'Error cargando siembras');
     } finally {
       setLoading(false);

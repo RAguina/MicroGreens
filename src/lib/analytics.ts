@@ -36,8 +36,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://micro-greens-backen
 
 export const analyticsAPI = {
   async getMetrics(): Promise<AnalyticsMetrics> {
-    console.log('Analytics: Fetching metrics from backend');
-
     try {
       // For now, we'll calculate metrics from the plantings data
       // Later this can be moved to a dedicated backend endpoint
@@ -52,11 +50,8 @@ export const analyticsAPI = {
       const plantingsData = await response.json();
       const plantings = plantingsData.data || plantingsData;
 
-      console.log('Analytics: Processing', plantings.length, 'plantings');
-
       return this.calculateMetrics(plantings);
     } catch (error) {
-      console.error('Analytics: Error fetching metrics:', error);
       throw error;
     }
   },

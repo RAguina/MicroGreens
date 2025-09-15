@@ -16,8 +16,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://micro-greens-backen
 
 export const authAPI = {
   async login(credentials: LoginCredentials): Promise<{ user: User; accessToken: string }> {
-    console.log('Auth: Making login API call to:', `${API_BASE}/api/auth/login`);
-
     const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: {
@@ -27,12 +25,8 @@ export const authAPI = {
       body: JSON.stringify(credentials)
     });
 
-    console.log('Auth: Login response status:', response.status);
-    console.log('Auth: Login response headers:', Object.fromEntries(response.headers.entries()));
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.log('Auth: Login error response:', errorText);
 
       try {
         const error = JSON.parse(errorText);
@@ -43,12 +37,6 @@ export const authAPI = {
     }
 
     const data = await response.json();
-    console.log('Auth: Login successful, data:', data);
-
-    // Check cookies after login
-    setTimeout(() => {
-      console.log('Auth: Cookies after login:', document.cookie);
-    }, 100);
 
     return {
       user: data.user,
@@ -58,67 +46,48 @@ export const authAPI = {
 
   async refreshToken(): Promise<{ user: User; accessToken: string } | null> {
     try {
-      console.log('Auth: Refreshing token from:', `${API_BASE}/api/auth/refresh`);
-
       const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/auth/refresh`, {
         method: 'POST'
       });
 
-      console.log('Auth: Refresh response status:', response.status);
-      console.log('Auth: Refresh response headers:', Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.log('Auth: Refresh error response:', errorText);
         return null;
       }
 
       const data = await response.json();
-      console.log('Auth: Refresh successful, data:', data);
 
       return {
         user: data.user,
         accessToken: data.accessToken || data.token || ''
       };
     } catch (error) {
-      console.error('Auth: Refresh error caught:', error);
       return null;
     }
   },
 
   async getCurrentUser(): Promise<User | null> {
     try {
-      console.log('Auth: Getting current user from:', `${API_BASE}/api/auth/me`);
-
       // Try refresh first to get valid access token
       const refreshResult = await this.refreshToken();
       if (!refreshResult) {
-        console.log('Auth: Refresh failed, user not authenticated');
         return null;
       }
 
-      console.log('Auth: Refresh successful, user:', refreshResult.user);
       return refreshResult.user;
     } catch (error) {
-      console.error('Auth: getCurrentUser error caught:', error);
       return null;
     }
   },
 
   async logout(): Promise<void> {
-    console.log('Auth: Logging out');
-
     try {
-      const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/auth/logout`, {
+      await csrfAPI.fetchWithCSRF(`${API_BASE}/api/auth/logout`, {
         method: 'POST'
       });
-
-      console.log('Auth: Logout response status:', response.status);
 
       // Clear CSRF token on logout
       csrfAPI.clearToken();
     } catch (error) {
-      console.error('Auth: Logout error:', error);
       // Clear CSRF token even on error
       csrfAPI.clearToken();
     }
