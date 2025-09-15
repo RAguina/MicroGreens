@@ -20,7 +20,10 @@ export const authAPI = {
 
     const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/auth/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: JSON.stringify(credentials)
     });
 

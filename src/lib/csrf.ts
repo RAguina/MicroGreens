@@ -33,9 +33,12 @@ export const csrfAPI = {
   async ensureToken(): Promise<string> {
     if (!csrfToken) {
       console.log('CSRF: No cached token, fetching new one');
-      return await this.getCSRFToken();
+      const token = await this.getCSRFToken();
+      // Small delay to ensure token is properly set
+      await new Promise(resolve => setTimeout(resolve, 50));
+      return token;
     }
-    console.log('CSRF: Using cached token');
+    console.log('CSRF: Using cached token:', csrfToken?.substring(0, 16) + '...');
     return csrfToken;
   },
 
@@ -57,6 +60,7 @@ export const csrfAPI = {
       };
 
       console.log(`CSRF: Making ${method} request to ${url} with token`);
+      console.log('CSRF: Request headers being sent:', headers);
 
       const response = await fetch(url, {
         ...options,
@@ -64,12 +68,17 @@ export const csrfAPI = {
         headers
       });
 
-      // If CSRF error, clear token and retry once
+      console.log(`CSRF: Response status: ${response.status}`);
+      console.log('CSRF: Response headers:', Object.fromEntries(response.headers.entries()));
+
+      // If 403 error, always retry once with fresh token (especially for incognito mode)
       if (response.status === 403) {
-        const errorText = await response.text();
-        if (errorText.includes('CSRF') || errorText.includes('token')) {
-          console.log('CSRF: Token invalid, clearing and retrying');
-          this.clearToken();
+        console.log('CSRF: 403 error detected, clearing token and retrying with fresh token');
+        this.clearToken();
+
+        try {
+          // Wait a bit to ensure any cookie operations complete
+          await new Promise(resolve => setTimeout(resolve, 100));
 
           const newToken = await this.getCSRFToken();
           const retryHeaders = {
@@ -77,12 +86,18 @@ export const csrfAPI = {
             'X-CSRF-Token': newToken
           };
 
-          console.log(`CSRF: Retrying ${method} request with new token`);
+          console.log(`CSRF: Retrying ${method} request with fresh token:`, newToken?.substring(0, 16) + '...');
+          console.log('CSRF: Retry headers:', retryHeaders);
+
           return fetch(url, {
             ...options,
             credentials: 'include',
             headers: retryHeaders
           });
+        } catch (retryError) {
+          console.error('CSRF: Error during retry:', retryError);
+          // Return original response if retry fails
+          return response;
         }
       }
 
