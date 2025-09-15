@@ -30,7 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (credentials: LoginCredentials) => {
     console.log('AuthContext: logging in user');
     const userData = await authAPI.login(credentials);
+    console.log('AuthContext: login successful, setting user:', userData);
     setUser(userData);
+    console.log('AuthContext: user state updated');
+    
+    // Verificar inmediatamente después del login
+    setTimeout(async () => {
+      console.log('AuthContext: Checking user persistence after login...');
+      const currentUser = await authAPI.getCurrentUser();
+      console.log('AuthContext: getCurrentUser after login returned:', currentUser);
+    }, 1000);
   };
 
   const logout = async () => {

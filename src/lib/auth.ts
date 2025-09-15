@@ -33,15 +33,24 @@ export const authAPI = {
 
   async getCurrentUser(): Promise<User | null> {
     try {
+      console.log('getCurrentUser: Making request to:', `${API_BASE}/api/auth/me`);
       const response = await fetch(`${API_BASE}/api/auth/me`, {
         credentials: 'include'
       });
       
-      if (!response.ok) return null;
+      console.log('getCurrentUser: Response status:', response.status);
+      console.log('getCurrentUser: Response ok:', response.ok);
+      
+      if (!response.ok) {
+        console.log('getCurrentUser: Response not ok, returning null');
+        return null;
+      }
       
       const data = await response.json();
+      console.log('getCurrentUser: Response data:', data);
       return data.user;
-    } catch {
+    } catch (error) {
+      console.error('getCurrentUser: Error caught:', error);
       return null;
     }
   },
