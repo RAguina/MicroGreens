@@ -336,7 +336,7 @@ export default function SiembrasPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
             <div className="space-y-2">
               <button
-                onClick={() => alert('Funcionalidad próximamente disponible')}
+                onClick={() => window.location.href = '/calendario'}
                 className="w-full text-left p-2 rounded hover:bg-gray-50 text-sm"
               >
                 📊 Ver calendario de siembras

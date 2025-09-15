@@ -6,12 +6,13 @@ import { PlantingFormData, plantingsAPI } from '@/lib/plantings';
 interface CreatePlantingFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  initialDate?: Date | null;
 }
 
-export default function CreatePlantingForm({ onSuccess, onCancel }: CreatePlantingFormProps) {
+export default function CreatePlantingForm({ onSuccess, onCancel, initialDate }: CreatePlantingFormProps) {
   const [formData, setFormData] = useState<PlantingFormData>({
     plantName: '',
-    datePlanted: new Date().toISOString().split('T')[0], // Today's date
+    datePlanted: initialDate ? initialDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0], // Today's date or selected date
     expectedHarvest: '',
     domeDate: '',
     lightDate: '',

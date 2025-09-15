@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
-export default function DashboardPage() {
+export default function InicioPage() {
   const { user } = useAuth();
   const router = useRouter();
 
