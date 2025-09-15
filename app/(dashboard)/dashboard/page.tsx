@@ -1,9 +1,11 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const router = useRouter();
 
   return (
     <div className="space-y-6">
@@ -24,7 +26,10 @@ export default function DashboardPage() {
           <p className="text-gray-600 text-sm mb-4">
             Gestiona tus cultivos de microverdes
           </p>
-          <button className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+          <button
+            onClick={() => router.push('/siembras')}
+            className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+          >
             Ver Siembras
           </button>
         </div>
@@ -36,7 +41,10 @@ export default function DashboardPage() {
           <p className="text-gray-600 text-sm mb-4">
             Reportes y estadísticas
           </p>
-          <button className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+          <button
+            onClick={() => router.push('/analytics')}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+          >
             Ver Analytics
           </button>
         </div>
@@ -48,7 +56,10 @@ export default function DashboardPage() {
           <p className="text-gray-600 text-sm mb-4">
             Ajustes del sistema
           </p>
-          <button className="w-full bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700">
+          <button
+            onClick={() => router.push('/configuracion')}
+            className="w-full bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700"
+          >
             Configuración
           </button>
         </div>
