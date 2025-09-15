@@ -1,3 +1,5 @@
+import { csrfAPI } from './csrf';
+
 // Types based on the real database schema and API contract
 export type PlantingStatus =
   | 'PLANTED'     // Seeds planted, germinating
@@ -53,8 +55,9 @@ export const plantingsAPI = {
     if (params?.status) searchParams.set('status', params.status);
 
     const url = `${API_BASE}/api/plantings${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
-    console.log('Fetching plantings from:', url);
+    console.log('Plantings: Fetching from:', url);
 
+    // GET request doesn't need CSRF token
     const response = await fetch(url, {
       credentials: 'include'
     });
@@ -64,57 +67,75 @@ export const plantingsAPI = {
     }
 
     const data = await response.json();
-    console.log('Plantings data received:', data);
+    console.log('Plantings: Data received:', data);
     return data.data || data; // Handle both paginated and direct responses
   },
 
   async createPlanting(planting: PlantingFormData): Promise<Planting> {
-    console.log('Creating planting:', planting);
+    console.log('Plantings: Creating planting:', planting);
 
-    const response = await fetch(`${API_BASE}/api/plantings`, {
+    const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/plantings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify(planting)
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || 'Failed to create planting');
+      const errorText = await response.text();
+      console.log('Plantings: Create error response:', errorText);
+
+      try {
+        const error = JSON.parse(errorText);
+        throw new Error(error.error || 'Failed to create planting');
+      } catch {
+        throw new Error(`Failed to create planting: ${response.status}`);
+      }
     }
 
     return response.json();
   },
 
   async updatePlanting(id: string, updates: Partial<PlantingFormData>): Promise<Planting> {
-    console.log('Updating planting:', id, updates);
+    console.log('Plantings: Updating planting:', id, updates);
 
-    const response = await fetch(`${API_BASE}/api/plantings/${id}`, {
+    const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/plantings/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify(updates)
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || 'Failed to update planting');
+      const errorText = await response.text();
+      console.log('Plantings: Update error response:', errorText);
+
+      try {
+        const error = JSON.parse(errorText);
+        throw new Error(error.error || 'Failed to update planting');
+      } catch {
+        throw new Error(`Failed to update planting: ${response.status}`);
+      }
     }
 
     return response.json();
   },
 
   async deletePlanting(id: string): Promise<{ success: boolean }> {
-    console.log('Deleting planting:', id);
+    console.log('Plantings: Deleting planting:', id);
 
-    const response = await fetch(`${API_BASE}/api/plantings/${id}`, {
-      method: 'DELETE',
-      credentials: 'include'
+    const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/plantings/${id}`, {
+      method: 'DELETE'
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || 'Failed to delete planting');
+      const errorText = await response.text();
+      console.log('Plantings: Delete error response:', errorText);
+
+      try {
+        const error = JSON.parse(errorText);
+        throw new Error(error.error || 'Failed to delete planting');
+      } catch {
+        throw new Error(`Failed to delete planting: ${response.status}`);
+      }
     }
 
     return response.json();

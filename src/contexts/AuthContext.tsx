@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, LoginCredentials, authAPI } from '@/lib/auth';
+import { csrfAPI } from '@/lib/csrf';
 
 interface AuthContextValue {
   user: User | null;
@@ -16,15 +17,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check auth on mount
+  // Initialize CSRF token and check auth on mount
   useEffect(() => {
-    console.log('AuthProvider mounted - checking current user');
-    authAPI.getCurrentUser()
-      .then((userData) => {
-        console.log('Current user result:', userData);
+    console.log('AuthProvider mounted - initializing CSRF and checking current user');
+
+    const initializeApp = async () => {
+      try {
+        // First, get CSRF token for future requests
+        console.log('AuthProvider: Getting CSRF token...');
+        await csrfAPI.getCSRFToken();
+        console.log('AuthProvider: CSRF token obtained');
+
+        // Then check current user
+        console.log('AuthProvider: Checking current user...');
+        const userData = await authAPI.getCurrentUser();
+        console.log('AuthProvider: Current user result:', userData);
         setUser(userData);
-      })
-      .finally(() => setIsLoading(false));
+      } catch (error) {
+        console.error('AuthProvider: Error during initialization:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeApp();
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
