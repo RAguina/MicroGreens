@@ -10,6 +10,7 @@ interface AuthContextValue {
   accessToken: string | null;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (userData: User) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -67,8 +68,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(null);
   };
 
+  const updateUser = async (userData: User) => {
+    console.log('AuthContext: updating user data');
+    // In a real app, this would call an API to update the user
+    // For now, we'll just update the local state
+    setUser(userData);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

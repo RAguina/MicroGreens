@@ -1,0 +1,208 @@
+/* Theme Variables for Tailwind v4 */
+
+:root {
+  /* Light theme colors */
+  --color-background: 255 255 255;
+  --color-foreground: 15 23 42;
+  --color-card: 255 255 255;
+  --color-card-foreground: 15 23 42;
+  --color-popover: 255 255 255;
+  --color-popover-foreground: 15 23 42;
+  --color-primary: 34 197 94;
+  --color-primary-foreground: 255 255 255;
+  --color-secondary: 241 245 249;
+  --color-secondary-foreground: 15 23 42;
+  --color-muted: 241 245 249;
+  --color-muted-foreground: 100 116 139;
+  --color-accent: 241 245 249;
+  --color-accent-foreground: 15 23 42;
+  --color-destructive: 239 68 68;
+  --color-destructive-foreground: 248 250 252;
+  --color-border: 226 232 240;
+  --color-input: 226 232 240;
+  --color-ring: 34 197 94;
+  --color-success: 34 197 94;
+  --color-warning: 251 191 36;
+  --color-error: 239 68 68;
+  --color-info: 59 130 246;
+}
+
+[data-theme="dark"] {
+  /* Dark theme colors */
+  --color-background: 2 6 23;
+  --color-foreground: 248 250 252;
+  --color-card: 15 23 42;
+  --color-card-foreground: 248 250 252;
+  --color-popover: 15 23 42;
+  --color-popover-foreground: 248 250 252;
+  --color-primary: 34 197 94;
+  --color-primary-foreground: 2 6 23;
+  --color-secondary: 30 41 59;
+  --color-secondary-foreground: 248 250 252;
+  --color-muted: 30 41 59;
+  --color-muted-foreground: 148 163 184;
+  --color-accent: 30 41 59;
+  --color-accent-foreground: 248 250 252;
+  --color-destructive: 220 38 38;
+  --color-destructive-foreground: 248 250 252;
+  --color-border: 30 41 59;
+  --color-input: 30 41 59;
+  --color-ring: 34 197 94;
+  --color-success: 34 197 94;
+  --color-warning: 251 191 36;
+  --color-error: 220 38 38;
+  --color-info: 59 130 246;
+}
+
+/* Theme-specific component styles */
+.dark .bg-white {
+  background-color: rgb(var(--color-card));
+}
+
+.dark .text-gray-900 {
+  color: rgb(var(--color-foreground));
+}
+
+.dark .text-gray-800 {
+  color: rgb(var(--color-foreground));
+}
+
+.dark .text-gray-700 {
+  color: rgb(var(--color-foreground));
+}
+
+.dark .text-gray-600 {
+  color: rgb(var(--color-muted-foreground));
+}
+
+.dark .text-gray-500 {
+  color: rgb(var(--color-muted-foreground));
+}
+
+.dark .border-gray-200 {
+  border-color: rgb(var(--color-border));
+}
+
+.dark .border-gray-300 {
+  border-color: rgb(var(--color-border));
+}
+
+.dark .bg-gray-50 {
+  background-color: rgb(var(--color-muted));
+}
+
+.dark .bg-gray-100 {
+  background-color: rgb(var(--color-muted));
+}
+
+.dark .hover\:bg-gray-50:hover {
+  background-color: rgb(var(--color-accent));
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: rgb(var(--color-accent));
+}
+
+/* Green theme colors - maintain brand consistency */
+.dark .bg-green-100 {
+  background-color: rgb(34 197 94 / 0.1);
+}
+
+.dark .text-green-600 {
+  color: rgb(var(--color-success));
+}
+
+.dark .bg-green-600 {
+  background-color: rgb(var(--color-success));
+}
+
+.dark .hover\:bg-green-700:hover {
+  background-color: rgb(21 128 61);
+}
+
+/* Blue colors */
+.dark .bg-blue-100 {
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+.dark .text-blue-600 {
+  color: rgb(var(--color-info));
+}
+
+.dark .bg-blue-600 {
+  background-color: rgb(var(--color-info));
+}
+
+.dark .hover\:bg-blue-700:hover {
+  background-color: rgb(29 78 216);
+}
+
+/* Yellow colors */
+.dark .bg-yellow-100 {
+  background-color: rgb(251 191 36 / 0.1);
+}
+
+.dark .text-yellow-600 {
+  color: rgb(var(--color-warning));
+}
+
+/* Purple colors */
+.dark .bg-purple-100 {
+  background-color: rgb(147 51 234 / 0.1);
+}
+
+.dark .text-purple-600 {
+  color: rgb(147 51 234);
+}
+
+/* Red colors */
+.dark .bg-red-50 {
+  background-color: rgb(var(--color-destructive) / 0.1);
+}
+
+.dark .text-red-600 {
+  color: rgb(var(--color-destructive));
+}
+
+.dark .text-red-800 {
+  color: rgb(var(--color-destructive));
+}
+
+.dark .border-red-200 {
+  border-color: rgb(var(--color-destructive) / 0.5);
+}
+
+/* Special backgrounds */
+.dark .bg-blue-50 {
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+.dark .border-blue-200 {
+  border-color: rgb(59 130 246 / 0.3);
+}
+
+.dark .text-blue-800 {
+  color: rgb(var(--color-info));
+}
+
+.dark .text-blue-700 {
+  color: rgb(var(--color-info));
+}
+
+/* Shadow adjustments for dark mode */
+.dark .shadow-sm {
+  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.dark .shadow {
+  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}

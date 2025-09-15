@@ -6,10 +6,15 @@ import ReportGeneratorModal from '@/components/reports/ReportGeneratorModal';
 import { ReportConfig } from '@/types/reports';
 import { ReportsService } from '@/lib/reports';
 import { Planting } from '@/lib/plantings';
+import ThemeToggle from '@/components/ui/ThemeToggle';
+import NotificationSettings from '@/components/settings/NotificationSettings';
+import EditProfileForm from '@/components/profile/EditProfileForm';
+import BackupSettings from '@/components/settings/BackupSettings';
 
 export default function ConfiguracionPage() {
   const { user } = useAuth();
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
   const [plantings, setPlantings] = useState<Planting[]>([]);
 
   const handleGenerateReport = async (config: ReportConfig) => {
@@ -72,8 +77,8 @@ export default function ConfiguracionPage() {
                 />
               </div>
               <button
-                onClick={() => alert('Funcionalidad próximamente disponible')}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                onClick={() => setShowEditProfile(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Editar Perfil
               </button>
@@ -85,44 +90,9 @@ export default function ConfiguracionPage() {
               <h2 className="text-xl font-semibold text-gray-900">Configuración del Sistema</h2>
             </div>
             <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">Notificaciones</h3>
-                  <p className="text-sm text-gray-600">Recibir alertas sobre el estado de las siembras</p>
-                </div>
-                <button
-                  onClick={() => alert('Funcionalidad próximamente disponible')}
-                  className="bg-green-600 text-white px-3 py-1 text-sm rounded hover:bg-green-700"
-                >
-                  Activado
-                </button>
-              </div>
+              <NotificationSettings />
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">Recordatorios</h3>
-                  <p className="text-sm text-gray-600">Alertas automáticas para fechas de cosecha</p>
-                </div>
-                <button
-                  onClick={() => alert('Funcionalidad próximamente disponible')}
-                  className="bg-green-600 text-white px-3 py-1 text-sm rounded hover:bg-green-700"
-                >
-                  Activado
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">Modo Oscuro</h3>
-                  <p className="text-sm text-gray-600">Cambiar tema de la aplicación</p>
-                </div>
-                <button
-                  onClick={() => alert('Funcionalidad próximamente disponible')}
-                  className="bg-gray-400 text-white px-3 py-1 text-sm rounded hover:bg-gray-500"
-                >
-                  Desactivado
-                </button>
-              </div>
+              <ThemeToggle />
             </div>
           </div>
         </div>
@@ -151,19 +121,13 @@ export default function ConfiguracionPage() {
             <div className="space-y-2">
               <button
                 onClick={() => setShowReportModal(true)}
-                className="w-full text-left p-2 rounded hover:bg-gray-50 text-sm"
+                className="w-full text-left p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
               >
                 📊 Exportar datos
               </button>
               <button
                 onClick={() => alert('Funcionalidad próximamente disponible')}
-                className="w-full text-left p-2 rounded hover:bg-gray-50 text-sm"
-              >
-                🔄 Respaldar información
-              </button>
-              <button
-                onClick={() => alert('Funcionalidad próximamente disponible')}
-                className="w-full text-left p-2 rounded hover:bg-gray-50 text-sm"
+                className="w-full text-left p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
               >
                 📱 Configurar móvil
               </button>
@@ -176,9 +140,14 @@ export default function ConfiguracionPage() {
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="text-blue-800 font-semibold mb-2">💡 Consejos</h3>
-            <ul className="text-blue-700 text-sm space-y-1">
+          {/* Backup Settings Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+            <BackupSettings />
+          </div>
+
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <h3 className="text-blue-800 dark:text-blue-200 font-semibold mb-2">💡 Consejos</h3>
+            <ul className="text-blue-700 dark:text-blue-300 text-sm space-y-1">
               <li>• Mantén tus datos actualizados</li>
               <li>• Activa las notificaciones</li>
               <li>• Exporta respaldos regularmente</li>
@@ -193,6 +162,12 @@ export default function ConfiguracionPage() {
         onClose={() => setShowReportModal(false)}
         plantings={plantings}
         onGenerate={handleGenerateReport}
+      />
+
+      {/* Edit Profile Modal */}
+      <EditProfileForm
+        isOpen={showEditProfile}
+        onClose={() => setShowEditProfile(false)}
       />
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Planting, PlantingFormData, plantingsAPI } from '@/lib/plantings';
 import { isoToLocalDateString, normalizeDate } from '@/utils/dateUtils';
+import { useNotify } from '@/contexts/NotificationContext';
 
 interface EditPlantingFormProps {
   planting: Planting;
@@ -11,6 +12,7 @@ interface EditPlantingFormProps {
 }
 
 export default function EditPlantingForm({ planting, onSuccess, onCancel }: EditPlantingFormProps) {
+  const notify = useNotify();
   const [formData, setFormData] = useState<PlantingFormData>({
     plantName: planting.plantName || '',
     datePlanted: isoToLocalDateString(planting.datePlanted), // Convert to local date string
@@ -45,6 +47,38 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
       };
 
       await plantingsAPI.updatePlanting(planting.id, cleanData);
+
+      // Send notification about status update
+      const oldStatus = planting.status;
+      const newStatus = formData.status;
+
+      if (oldStatus !== newStatus) {
+        const statusMessages = {
+          'PLANTED': '🌱 Plantado',
+          'GROWING': '🌿 Creciendo',
+          'HARVESTED': '🌾 Cosechado',
+          'COMPOSTED': '♻️ Compostado'
+        };
+
+        notify.success(
+          'Estado Actualizado',
+          `${formData.plantName || 'Planta'} cambió de ${statusMessages[oldStatus]} a ${statusMessages[newStatus]}`,
+          {
+            action: {
+              label: 'Ver Siembras',
+              onClick: () => {
+                window.location.href = '/siembras';
+              }
+            }
+          }
+        );
+      } else {
+        notify.success(
+          'Siembra Actualizada',
+          `Los datos de ${formData.plantName || 'la planta'} han sido actualizados correctamente`
+        );
+      }
+
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al actualizar la siembra');

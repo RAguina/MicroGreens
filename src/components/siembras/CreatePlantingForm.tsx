@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { PlantingFormData, plantingsAPI } from '@/lib/plantings';
 import { toLocalDateString, getTodayLocalString, normalizeDate } from '@/utils/dateUtils';
+import { useNotify } from '@/contexts/NotificationContext';
 
 interface CreatePlantingFormProps {
   onSuccess: () => void;
@@ -11,6 +12,7 @@ interface CreatePlantingFormProps {
 }
 
 export default function CreatePlantingForm({ onSuccess, onCancel, initialDate }: CreatePlantingFormProps) {
+  const notify = useNotify();
   const [formData, setFormData] = useState<PlantingFormData>({
     plantName: '',
     datePlanted: initialDate ? toLocalDateString(initialDate) : getTodayLocalString(), // Today's date or selected date
@@ -45,6 +47,20 @@ export default function CreatePlantingForm({ onSuccess, onCancel, initialDate }:
       };
 
       await plantingsAPI.createPlanting(cleanData);
+
+      notify.success(
+        '🌱 Nueva Siembra Creada',
+        `${formData.plantName || 'Nueva planta'} ha sido plantada exitosamente`,
+        {
+          action: {
+            label: 'Ver Siembras',
+            onClick: () => {
+              window.location.href = '/siembras';
+            }
+          }
+        }
+      );
+
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al crear la siembra');
