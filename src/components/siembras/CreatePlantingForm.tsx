@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { PlantingFormData, plantingsAPI } from '@/lib/plantings';
+import { toLocalDateString, getTodayLocalString, normalizeDate } from '@/utils/dateUtils';
 
 interface CreatePlantingFormProps {
   onSuccess: () => void;
@@ -12,7 +13,7 @@ interface CreatePlantingFormProps {
 export default function CreatePlantingForm({ onSuccess, onCancel, initialDate }: CreatePlantingFormProps) {
   const [formData, setFormData] = useState<PlantingFormData>({
     plantName: '',
-    datePlanted: initialDate ? initialDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0], // Today's date or selected date
+    datePlanted: initialDate ? toLocalDateString(initialDate) : getTodayLocalString(), // Today's date or selected date
     expectedHarvest: '',
     domeDate: '',
     lightDate: '',
@@ -31,12 +32,13 @@ export default function CreatePlantingForm({ onSuccess, onCancel, initialDate }:
     setError(null);
 
     try {
-      // Clean up form data - remove empty strings
+      // Clean up form data - remove empty strings and normalize dates
       const cleanData: PlantingFormData = {
         ...formData,
-        expectedHarvest: formData.expectedHarvest || undefined,
-        domeDate: formData.domeDate || undefined,
-        lightDate: formData.lightDate || undefined,
+        datePlanted: normalizeDate(formData.datePlanted),
+        expectedHarvest: formData.expectedHarvest ? normalizeDate(formData.expectedHarvest) : undefined,
+        domeDate: formData.domeDate ? normalizeDate(formData.domeDate) : undefined,
+        lightDate: formData.lightDate ? normalizeDate(formData.lightDate) : undefined,
         quantity: formData.quantity || undefined,
         trayNumber: formData.trayNumber || undefined,
         notes: formData.notes || undefined,

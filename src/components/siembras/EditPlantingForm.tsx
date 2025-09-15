@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Planting, PlantingFormData, plantingsAPI } from '@/lib/plantings';
+import { isoToLocalDateString, normalizeDate } from '@/utils/dateUtils';
 
 interface EditPlantingFormProps {
   planting: Planting;
@@ -12,10 +13,10 @@ interface EditPlantingFormProps {
 export default function EditPlantingForm({ planting, onSuccess, onCancel }: EditPlantingFormProps) {
   const [formData, setFormData] = useState<PlantingFormData>({
     plantName: planting.plantName || '',
-    datePlanted: planting.datePlanted.split('T')[0], // Convert to date string
-    expectedHarvest: planting.expectedHarvest ? planting.expectedHarvest.split('T')[0] : '',
-    domeDate: planting.domeDate ? planting.domeDate.split('T')[0] : '',
-    lightDate: planting.lightDate ? planting.lightDate.split('T')[0] : '',
+    datePlanted: isoToLocalDateString(planting.datePlanted), // Convert to local date string
+    expectedHarvest: planting.expectedHarvest ? isoToLocalDateString(planting.expectedHarvest) : '',
+    domeDate: planting.domeDate ? isoToLocalDateString(planting.domeDate) : '',
+    lightDate: planting.lightDate ? isoToLocalDateString(planting.lightDate) : '',
     quantity: planting.quantity || undefined,
     status: planting.status,
     trayNumber: planting.trayNumber || '',
@@ -31,12 +32,13 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
     setError(null);
 
     try {
-      // Clean up form data - remove empty strings
+      // Clean up form data - remove empty strings and normalize dates
       const cleanData: Partial<PlantingFormData> = {
         ...formData,
-        expectedHarvest: formData.expectedHarvest || undefined,
-        domeDate: formData.domeDate || undefined,
-        lightDate: formData.lightDate || undefined,
+        datePlanted: normalizeDate(formData.datePlanted),
+        expectedHarvest: formData.expectedHarvest ? normalizeDate(formData.expectedHarvest) : undefined,
+        domeDate: formData.domeDate ? normalizeDate(formData.domeDate) : undefined,
+        lightDate: formData.lightDate ? normalizeDate(formData.lightDate) : undefined,
         quantity: formData.quantity || undefined,
         trayNumber: formData.trayNumber || undefined,
         notes: formData.notes || undefined,
