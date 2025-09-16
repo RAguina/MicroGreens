@@ -91,11 +91,13 @@ export const plantingsAPI = {
   },
 
   async updatePlanting(id: string, updates: Partial<PlantingFormData>): Promise<Planting> {
+    console.log('Attempting to update planting:', id, updates);
     const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/plantings/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
     });
+    console.log('Update response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -112,9 +114,11 @@ export const plantingsAPI = {
   },
 
   async deletePlanting(id: string): Promise<{ success: boolean }> {
+    console.log('Attempting to delete planting:', id);
     const response = await csrfAPI.fetchWithCSRF(`${API_BASE}/api/plantings/${id}`, {
       method: 'DELETE'
     });
+    console.log('Delete response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();

@@ -81,7 +81,10 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
 
       onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar la siembra');
+      console.error('Error updating planting:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar la siembra';
+      setError(errorMessage);
+      notify.error('Error de Actualización', errorMessage);
     } finally {
       setLoading(false);
     }

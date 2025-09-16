@@ -21,7 +21,9 @@ export default function DeletePlantingConfirm({ planting, onSuccess, onCancel }:
       await plantingsAPI.deletePlanting(planting.id);
       onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al eliminar la siembra');
+      console.error('Error deleting planting:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error al eliminar la siembra';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
