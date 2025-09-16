@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
@@ -101,7 +101,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
       return () => clearInterval(checkInterval);
     }
-  }, [settings.enabled, settings.harvestReminders, settings.reminderDays]);
+  }, [settings.enabled, settings.harvestReminders]);
 
   const addNotification = (notification: Omit<Notification, 'id' | 'createdAt'>): string => {
     if (!settings.enabled) return '';
@@ -131,7 +131,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     localStorage.setItem('microgreens-notification-settings', JSON.stringify(updatedSettings));
   };
 
-  const checkHarvestReminders = async () => {
+  const checkHarvestReminders = useCallback(async () => {
     try {
       // This would typically fetch from your plantings API
       // For now, we'll use a mock check
@@ -177,7 +177,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     } catch (error) {
       console.error('Error checking harvest reminders:', error);
     }
-  };
+  }, [settings.reminderDays, addNotification]);
 
   const value: NotificationContextType = {
     notifications,

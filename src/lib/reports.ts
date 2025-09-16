@@ -673,13 +673,13 @@ export class ReportsService {
       margin: { top: 60, left: 20, right: 20 },
       didDrawPage: () => {
         // Add page numbers
-        const pageNumber = (doc as any).internal.getCurrentPageInfo().pageNumber;
-        const pageCount = (doc as any).internal.getNumberOfPages();
+        const pageNumber = (doc as jsPDF & { internal: { getCurrentPageInfo(): { pageNumber: number } } }).internal.getCurrentPageInfo().pageNumber;
+        const pageCount = (doc as jsPDF & { internal: { getNumberOfPages(): number } }).internal.getNumberOfPages();
         doc.setFontSize(10);
         doc.text(
           `Página ${pageNumber} de ${pageCount}`,
-          (doc as any).internal.pageSize.width - 50,
-          (doc as any).internal.pageSize.height - 10
+          (doc as jsPDF & { internal: { pageSize: { width: number; height: number } } }).internal.pageSize.width - 50,
+          (doc as jsPDF & { internal: { pageSize: { width: number; height: number } } }).internal.pageSize.height - 10
         );
       }
     });
@@ -700,13 +700,13 @@ export class ReportsService {
       currentY += 15;
 
       doc.setFontSize(11);
-      const summary = analytics.executiveSummary;
-      doc.text(`Período: ${summary.period}`, 25, currentY);
-      doc.text(`Total Siembras: ${summary.totalPlantings}`, 25, currentY + 8);
-      doc.text(`Cosechadas: ${summary.harvestedCount}`, 25, currentY + 16);
-      doc.text(`Activas: ${summary.activeCount}`, 25, currentY + 24);
-      doc.text(`Eficiencia: ${summary.efficiencyRate}%`, 25, currentY + 32);
-      doc.text(`Promedio días cosecha: ${summary.avgDaysToHarvest}`, 25, currentY + 40);
+      const summary = analytics.executiveSummary as Record<string, unknown>;
+      doc.text(`Período: ${summary.period || 'N/A'}`, 25, currentY);
+      doc.text(`Total Siembras: ${summary.totalPlantings || 0}`, 25, currentY + 8);
+      doc.text(`Cosechadas: ${summary.harvestedCount || 0}`, 25, currentY + 16);
+      doc.text(`Activas: ${summary.activeCount || 0}`, 25, currentY + 24);
+      doc.text(`Eficiencia: ${summary.efficiencyRate || 0}%`, 25, currentY + 32);
+      doc.text(`Promedio días cosecha: ${summary.avgDaysToHarvest || 0}`, 25, currentY + 40);
       currentY += 55;
     }
 
@@ -729,7 +729,7 @@ export class ReportsService {
     }
 
     // Top Plants
-    if (analytics.topPlants && analytics.topPlants.length > 0) {
+    if (analytics.topPlants && Array.isArray(analytics.topPlants) && analytics.topPlants.length > 0) {
       doc.setFontSize(16);
       doc.text('Plantas Más Exitosas', 20, currentY);
       currentY += 10;
@@ -752,7 +752,7 @@ export class ReportsService {
     }
 
     // Monthly Trends
-    if (analytics.monthlyTrends && analytics.monthlyTrends.length > 0) {
+    if (analytics.monthlyTrends && Array.isArray(analytics.monthlyTrends) && analytics.monthlyTrends.length > 0) {
       // Add new page if needed
       if (currentY > doc.internal.pageSize.height - 80) {
         doc.addPage();
@@ -779,14 +779,14 @@ export class ReportsService {
     }
 
     // Add page numbers
-    const pageCount = doc.internal.getNumberOfPages();
+    const pageCount = (doc as jsPDF & { internal: { getNumberOfPages(): number } }).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(10);
       doc.text(
         `Página ${i} de ${pageCount}`,
-        doc.internal.pageSize.width - 50,
-        doc.internal.pageSize.height - 10
+        (doc as jsPDF & { internal: { pageSize: { width: number; height: number } } }).internal.pageSize.width - 50,
+        (doc as jsPDF & { internal: { pageSize: { width: number; height: number } } }).internal.pageSize.height - 10
       );
     }
   }
