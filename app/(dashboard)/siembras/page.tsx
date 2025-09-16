@@ -6,6 +6,9 @@ import CreatePlantingForm from '@/components/siembras/CreatePlantingForm';
 import EditPlantingForm from '@/components/siembras/EditPlantingForm';
 import DeletePlantingConfirm from '@/components/siembras/DeletePlantingConfirm';
 import PlantVarietyModal from '@/components/plantVarieties/PlantVarietyModal';
+import ReportGeneratorModal from '@/components/reports/ReportGeneratorModal';
+import { ReportsService } from '@/lib/reports';
+import { ReportConfig } from '@/types/reports';
 
 type ViewMode = 'cards' | 'table';
 
@@ -19,6 +22,7 @@ export default function SiembrasPage() {
   const [deletingPlanting, setDeletingPlanting] = useState<Planting | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [showVarietyModal, setShowVarietyModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     loadPlantings();
@@ -59,6 +63,15 @@ export default function SiembrasPage() {
       case 'HARVESTED': return 'Cosechado';
       case 'COMPOSTED': return 'Compostado';
       default: return status;
+    }
+  };
+
+  const handleGenerateReport = async (config: ReportConfig) => {
+    try {
+      await ReportsService.generateAndDownloadReport(plantings, config);
+      setShowReportModal(false);
+    } catch (error) {
+      console.error('Error generating report:', error);
     }
   };
 
@@ -348,7 +361,7 @@ export default function SiembrasPage() {
                 🌱 Registrar nueva variedad
               </button>
               <button
-                onClick={() => alert('Funcionalidad próximamente disponible')}
+                onClick={() => setShowReportModal(true)}
                 className="w-full text-left p-2 rounded hover:bg-gray-50 text-sm"
               >
                 📋 Exportar reporte
@@ -404,6 +417,16 @@ export default function SiembrasPage() {
         <PlantVarietyModal
           isOpen={showVarietyModal}
           onClose={() => setShowVarietyModal(false)}
+        />
+      )}
+
+      {/* Report Generator Modal */}
+      {showReportModal && (
+        <ReportGeneratorModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          plantings={plantings}
+          onGenerate={handleGenerateReport}
         />
       )}
     </div>

@@ -83,11 +83,18 @@ export default function InicioPage() {
       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
         <h3 className="text-green-800 font-semibold mb-2">✅ Sistema Funcionando</h3>
         <ul className="text-green-700 text-sm space-y-1">
-          <li>• Auth JWT real conectado al backend</li>
-          <li>• Cookies HttpOnly configuradas</li>
-          <li>• Context y AuthGuard funcionando</li>
-          <li>• Navegación y redirects correctos</li>
-          <li>• Sin mocks, solo API real</li>
+          <li>• Sistema CRUD completo de siembras con estados</li>
+          <li>• Calendario interactivo con eventos automáticos</li>
+          <li>• Sistema de reportes con exportación CSV/PDF</li>
+          <li>• Modo oscuro funcional con persistencia</li>
+          <li>• Sistema de notificaciones toast completo</li>
+          <li>• Recordatorios automáticos de cosecha</li>
+          <li>• Edición de perfil con cambio de contraseña</li>
+          <li>• Sistema de respaldo/restauración de datos</li>
+          <li>• PWA configurado para móviles</li>
+          <li>• Eliminación segura de cuenta</li>
+          <li>• Gestión de variedades de plantas personalizada</li>
+          <li>• Auth JWT y navegación protegida</li>
         </ul>
       </div>
     </div>
