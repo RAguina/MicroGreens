@@ -74,7 +74,7 @@ export const csrfAPI = {
             credentials: 'include',
             headers: retryHeaders
           });
-        } catch (retryError) {
+        } catch {
           // Return original response if retry fails
           return response;
         }

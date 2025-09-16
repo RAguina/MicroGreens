@@ -62,7 +62,7 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
 
         notify.success(
           'Estado Actualizado',
-          `${formData.plantName || 'Planta'} cambió de ${statusMessages[oldStatus]} a ${statusMessages[newStatus]}`,
+          `${formData.plantName || 'Planta'} cambió de ${statusMessages[oldStatus!]} a ${statusMessages[newStatus!]}`,
           {
             action: {
               label: 'Ver Siembras',

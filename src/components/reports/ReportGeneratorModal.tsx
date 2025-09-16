@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Planting } from '@/lib/plantings';
+import { Planting, PlantingStatus } from '@/lib/plantings';
 import {
   ReportConfig,
   PlantingsReportConfig,
@@ -70,8 +70,8 @@ export default function ReportGeneratorModal({
   useEffect(() => {
     if (isOpen) {
       // Extract unique plant names and trays from plantings
-      const uniquePlantNames = [...new Set(plantings.map(p => p.plantName).filter(Boolean))];
-      const uniqueTrays = [...new Set(plantings.map(p => p.trayNumber).filter(Boolean))];
+      const uniquePlantNames = [...new Set(plantings.map(p => p.plantName).filter(Boolean))] as string[];
+      const uniqueTrays = [...new Set(plantings.map(p => p.trayNumber).filter(Boolean))] as string[];
 
       setAvailableOptions({
         plantNames: uniquePlantNames,
@@ -452,7 +452,7 @@ export default function ReportGeneratorModal({
                         <label key={status} className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={filters.status?.includes(status) || false}
+                            checked={filters.status?.includes(status as PlantingStatus) || false}
                             onChange={() => toggleFilterValue('status', status)}
                             className="mr-2"
                           />

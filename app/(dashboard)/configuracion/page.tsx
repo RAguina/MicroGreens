@@ -18,7 +18,7 @@ export default function ConfiguracionPage() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
-  const [plantings, setPlantings] = useState<Planting[]>([]);
+  const [plantings] = useState<Planting[]>([]);
 
   const handleGenerateReport = async (config: ReportConfig) => {
     try {

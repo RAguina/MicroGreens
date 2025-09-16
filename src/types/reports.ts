@@ -142,7 +142,7 @@ export const PRESET_REPORTS: ReportConfig[] = [
 
 export interface GeneratedReport {
   config: ReportConfig;
-  data: any;
+  data: Record<string, unknown>[] | Record<string, unknown>;
   generatedAt: Date;
   fileName: string;
   fileSize?: number;

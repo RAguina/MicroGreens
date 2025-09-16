@@ -10,7 +10,7 @@ interface DeleteAccountModalProps {
 }
 
 export default function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps) {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const notify = useNotify();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);

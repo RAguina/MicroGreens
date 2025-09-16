@@ -72,7 +72,7 @@ export default function MobileSettings() {
       }
 
       setDeferredPrompt(null);
-    } catch (error) {
+    } catch {
       notify.error(
         'Error de Instalación',
         'No se pudo instalar la aplicación. Intenta desde el menú del navegador.'
@@ -104,7 +104,7 @@ export default function MobileSettings() {
           'Puedes activarlas desde la configuración del navegador'
         );
       }
-    } catch (error) {
+    } catch {
       notify.error(
         'Error',
         'No se pudo solicitar permiso para notificaciones'
@@ -129,8 +129,8 @@ export default function MobileSettings() {
         '⚙️ Service Worker Registrado',
         'La app ahora puede funcionar offline'
       );
-    } catch (error) {
-      console.error('Service Worker registration failed:', error);
+    } catch {
+      console.error('Service Worker registration failed');
       notify.error(
         'Error de Registro',
         'No se pudo registrar el service worker'

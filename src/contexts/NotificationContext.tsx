@@ -142,7 +142,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       const now = new Date();
       const reminderDate = new Date(now.getTime() + (settings.reminderDays * 24 * 60 * 60 * 1000));
 
-      plantings.forEach((planting: any) => {
+      plantings.forEach((planting: { id: string; status: string; expectedHarvest?: string; plantType: string; plantName?: string }) => {
         if (planting.status === 'GROWING' && planting.expectedHarvest) {
           const harvestDate = new Date(planting.expectedHarvest);
 
@@ -158,7 +158,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
               addNotification({
                 type: 'warning',
                 title: '🌾 Recordatorio de Cosecha',
-                message: `${planting.plantName} estará listo para cosechar en ${daysUntilHarvest} día(s)`,
+                message: `${planting.plantName || planting.plantType} estará listo para cosechar en ${daysUntilHarvest} día(s)`,
                 duration: 0, // Persistent
                 persistent: true,
                 action: {

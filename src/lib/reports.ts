@@ -6,8 +6,7 @@ import {
   GeneratedReport,
   DateRange,
   ReportFilters,
-  DEFAULT_PLANTING_COLUMNS,
-  DEFAULT_ANALYTICS_SECTIONS
+  SortConfig
 } from '@/types/reports';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -20,7 +19,7 @@ export class ReportsService {
   static generatePlantingsReport(
     plantings: Planting[],
     config: PlantingsReportConfig
-  ): any[] {
+  ): Record<string, string | number | Date>[] {
     let filteredPlantings = this.applyFilters(plantings, config.filters, config.dateRange);
 
     // Apply sorting
@@ -30,7 +29,7 @@ export class ReportsService {
 
     // Map to enabled columns only
     return filteredPlantings.map(planting => {
-      const row: any = {};
+      const row: Record<string, string | number | Date> = {};
 
       config.columns.forEach(col => {
         if (!col.enabled) return;
@@ -89,9 +88,9 @@ export class ReportsService {
   static generateAnalyticsReport(
     plantings: Planting[],
     config: AnalyticsReportConfig
-  ): any {
+  ): Record<string, unknown> {
     const filteredPlantings = this.applyFilters(plantings, config.filters || {}, config.dateRange);
-    const analytics: any = {};
+    const analytics: Record<string, unknown> = {};
 
     config.sections.forEach(section => {
       if (!section.enabled) return;
@@ -113,7 +112,7 @@ export class ReportsService {
           analytics.efficiencyRates = this.generateEfficiencyRates(filteredPlantings);
           break;
         case 'monthly_trends':
-          analytics.monthlyTrends = this.generateMonthlyTrends(filteredPlantings, config.dateRange);
+          analytics.monthlyTrends = this.generateMonthlyTrends(filteredPlantings);
           break;
         case 'tray_performance':
           analytics.trayPerformance = this.generateTrayPerformance(filteredPlantings);
@@ -180,11 +179,11 @@ export class ReportsService {
   }
 
   // Apply sorting to plantings
-  private static applySorting(plantings: Planting[], sorting: any[]): Planting[] {
+  private static applySorting(plantings: Planting[], sorting: SortConfig[]): Planting[] {
     return plantings.sort((a, b) => {
       for (const sort of sorting) {
-        let aVal: any;
-        let bVal: any;
+        let aVal: string | number | Date;
+        let bVal: string | number | Date;
 
         switch (sort.field) {
           case 'plantName':
@@ -297,7 +296,7 @@ export class ReportsService {
     };
   }
 
-  private static generateMonthlyTrends(plantings: Planting[], dateRange: DateRange) {
+  private static generateMonthlyTrends(plantings: Planting[]) {
     const monthsData: { [key: string]: { planted: number; harvested: number } } = {};
 
     plantings.forEach(p => {
@@ -350,20 +349,20 @@ export class ReportsService {
     // Analysis of growth cycles, patterns, seasonal effects
     return {
       averageCycleLength: this.calculateAverageHarvestTime(plantings.filter(p => p.status === 'HARVESTED')),
-      seasonalPatterns: this.analyzeSeasonalPatterns(plantings),
-      cyclePredictability: this.analyzeCyclePredictability(plantings)
+      seasonalPatterns: this.analyzeSeasonalPatterns(),
+      cyclePredictability: this.analyzeCyclePredictability()
     };
   }
 
   private static generateProjections(plantings: Planting[]) {
-    const activeCount = plantings.filter(p => p.status === 'GROWING' || p.status === 'PLANTED').length;
-    const avgHarvestTime = this.calculateAverageHarvestTime(plantings.filter(p => p.status === 'HARVESTED'));
+    // const activeCount = plantings.filter(p => p.status === 'GROWING' || p.status === 'PLANTED').length;
+    // const avgHarvestTime = this.calculateAverageHarvestTime(plantings.filter(p => p.status === 'HARVESTED'));
 
     return {
       expectedHarvests30Days: this.projectHarvests(plantings, 30),
       expectedHarvests60Days: this.projectHarvests(plantings, 60),
       expectedHarvests90Days: this.projectHarvests(plantings, 90),
-      recommendedPlantingSchedule: this.generatePlantingSchedule(plantings)
+      recommendedPlantingSchedule: this.generatePlantingSchedule()
     };
   }
 
@@ -426,7 +425,7 @@ export class ReportsService {
     return Math.round(totalDays / withLight.length);
   }
 
-  private static analyzeSeasonalPatterns(plantings: Planting[]) {
+  private static analyzeSeasonalPatterns() {
     // Placeholder for seasonal analysis
     return {
       bestPerformingSeasons: ['Primavera', 'Otoño'],
@@ -439,7 +438,7 @@ export class ReportsService {
     };
   }
 
-  private static analyzeCyclePredictability(plantings: Planting[]) {
+  private static analyzeCyclePredictability() {
     // Placeholder for cycle predictability analysis
     return {
       predictabilityScore: 78,
@@ -462,7 +461,7 @@ export class ReportsService {
     }).length;
   }
 
-  private static generatePlantingSchedule(plantings: Planting[]) {
+  private static generatePlantingSchedule() {
     // Placeholder for intelligent planting schedule recommendations
     return [
       'Plantar 5-7 bandejas por semana para mantener producción constante',
@@ -510,7 +509,7 @@ export class ReportsService {
     config: ReportConfig
   ): Promise<GeneratedReport> {
     const fileName = this.generateFileName(config);
-    let data: any;
+    let data: Record<string, unknown>[] | Record<string, unknown>;
 
     if (config.type === 'plantings') {
       data = this.generatePlantingsReport(plantings, config as PlantingsReportConfig);
@@ -540,10 +539,10 @@ export class ReportsService {
     return `${safeName}_${date}`;
   }
 
-  private static downloadCSV(data: any[], fileName: string, reportType: string): void {
+  private static downloadCSV(data: Record<string, unknown>[] | Record<string, unknown>, fileName: string, reportType: string): void {
     if (reportType === 'analytics') {
       // For analytics, convert the object structure to CSV format
-      const csvContent = this.convertAnalyticsToCSV(data);
+      const csvContent = this.convertAnalyticsToCSV(data as Record<string, unknown>);
       this.triggerDownload(csvContent, `${fileName}.csv`, 'text/csv');
       return;
     }
@@ -554,10 +553,10 @@ export class ReportsService {
     }
 
     // Get headers from the first row
-    const headers = Object.keys(data[0]);
+    const headers = Object.keys((data as Record<string, unknown>[])[0]);
     const csvContent = [
       headers.join(','), // Header row
-      ...data.map(row =>
+      ...(data as Record<string, unknown>[]).map(row =>
         headers.map(header => {
           const value = row[header];
           // Escape commas and quotes in CSV
@@ -572,18 +571,19 @@ export class ReportsService {
     this.triggerDownload(csvContent, `${fileName}.csv`, 'text/csv');
   }
 
-  private static convertAnalyticsToCSV(analytics: any): string {
+  private static convertAnalyticsToCSV(analytics: Record<string, unknown>): string {
     const rows: string[] = [];
 
     // Add executive summary
     if (analytics.executiveSummary) {
+      const summary = analytics.executiveSummary as Record<string, unknown>;
       rows.push('RESUMEN EJECUTIVO');
-      rows.push(`Período,${analytics.executiveSummary.period}`);
-      rows.push(`Total Siembras,${analytics.executiveSummary.totalPlantings}`);
-      rows.push(`Cosechadas,${analytics.executiveSummary.harvestedCount}`);
-      rows.push(`Activas,${analytics.executiveSummary.activeCount}`);
-      rows.push(`Eficiencia,${analytics.executiveSummary.efficiencyRate}%`);
-      rows.push(`Promedio Días Cosecha,${analytics.executiveSummary.avgDaysToHarvest}`);
+      rows.push(`Período,${summary.period || 'N/A'}`);
+      rows.push(`Total Siembras,${summary.totalPlantings || 0}`);
+      rows.push(`Cosechadas,${summary.harvestedCount || 0}`);
+      rows.push(`Activas,${summary.activeCount || 0}`);
+      rows.push(`Eficiencia,${summary.efficiencyRate || 0}%`);
+      rows.push(`Promedio Días Cosecha,${summary.avgDaysToHarvest || 0}`);
       rows.push('');
     }
 
@@ -601,7 +601,7 @@ export class ReportsService {
     if (analytics.topPlants) {
       rows.push('PLANTAS MÁS EXITOSAS');
       rows.push('Planta,Total,Cosechadas,Tasa Éxito %');
-      analytics.topPlants.forEach((plant: any) => {
+      (analytics.topPlants as Array<{ plantName: string; totalCount: number; harvestedCount: number; successRate: number }>).forEach((plant) => {
         rows.push(`${plant.plantName},${plant.totalCount},${plant.harvestedCount},${plant.successRate}`);
       });
       rows.push('');
@@ -611,7 +611,7 @@ export class ReportsService {
     if (analytics.monthlyTrends) {
       rows.push('TENDENCIAS MENSUALES');
       rows.push('Mes,Plantadas,Cosechadas,Eficiencia %');
-      analytics.monthlyTrends.forEach((trend: any) => {
+      (analytics.monthlyTrends as Array<{ month: string; planted: number; harvested: number; efficiency: number }>).forEach((trend) => {
         rows.push(`${trend.month},${trend.planted},${trend.harvested},${trend.efficiency}`);
       });
     }
@@ -619,7 +619,7 @@ export class ReportsService {
     return rows.join('\n');
   }
 
-  private static downloadPDF(data: any, fileName: string, config: ReportConfig): void {
+  private static downloadPDF(data: Record<string, unknown>[] | Record<string, unknown>, fileName: string, config: ReportConfig): void {
     const doc = new jsPDF();
 
     // Add title
@@ -631,15 +631,15 @@ export class ReportsService {
     doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 20, 45);
 
     if (config.type === 'plantings') {
-      this.generatePlantingsPDF(doc, data, config as PlantingsReportConfig);
+      this.generatePlantingsPDF(doc, data as Record<string, unknown>[]);
     } else {
-      this.generateAnalyticsPDF(doc, data, config as AnalyticsReportConfig);
+      this.generateAnalyticsPDF(doc, data as Record<string, unknown>);
     }
 
     doc.save(`${fileName}.pdf`);
   }
 
-  private static generatePlantingsPDF(doc: jsPDF, data: any[], config: PlantingsReportConfig): void {
+  private static generatePlantingsPDF(doc: jsPDF, data: Record<string, unknown>[]): void {
     if (data.length === 0) {
       doc.text('No hay datos para mostrar', 20, 70);
       return;
@@ -647,7 +647,7 @@ export class ReportsService {
 
     // Prepare table data
     const headers = Object.keys(data[0]);
-    const rows = data.map(row => headers.map(header => row[header] || '-'));
+    const rows = data.map(row => headers.map(header => String(row[header] || '-')));
 
     // Add table using autoTable
     autoTable(doc, {
@@ -671,26 +671,26 @@ export class ReportsService {
         0: { cellWidth: 'auto' },
       },
       margin: { top: 60, left: 20, right: 20 },
-      didDrawPage: (data) => {
+      didDrawPage: () => {
         // Add page numbers
-        const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
-        const pageCount = doc.internal.getNumberOfPages();
+        const pageNumber = (doc as any).internal.getCurrentPageInfo().pageNumber;
+        const pageCount = (doc as any).internal.getNumberOfPages();
         doc.setFontSize(10);
         doc.text(
           `Página ${pageNumber} de ${pageCount}`,
-          doc.internal.pageSize.width - 50,
-          doc.internal.pageSize.height - 10
+          (doc as any).internal.pageSize.width - 50,
+          (doc as any).internal.pageSize.height - 10
         );
       }
     });
 
     // Add summary at the end
-    const finalY = (doc as any).lastAutoTable.finalY || 100;
+    const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || 100;
     doc.setFontSize(12);
     doc.text(`Total de registros: ${data.length}`, 20, finalY + 20);
   }
 
-  private static generateAnalyticsPDF(doc: jsPDF, analytics: any, config: AnalyticsReportConfig): void {
+  private static generateAnalyticsPDF(doc: jsPDF, analytics: Record<string, unknown>): void {
     let currentY = 60;
 
     // Executive Summary
@@ -725,7 +725,7 @@ export class ReportsService {
         margin: { left: 25, right: 20 }
       });
 
-      currentY = (doc as any).lastAutoTable.finalY + 20;
+      currentY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || currentY + 20;
     }
 
     // Top Plants
@@ -736,7 +736,7 @@ export class ReportsService {
 
       autoTable(doc, {
         head: [['Planta', 'Total', 'Cosechadas', 'Éxito %']],
-        body: analytics.topPlants.map((plant: any) => [
+        body: (analytics.topPlants as Array<{ plantName: string; totalCount: number; harvestedCount: number; successRate: number }>).map(plant => [
           plant.plantName,
           plant.totalCount,
           plant.harvestedCount,
@@ -748,7 +748,7 @@ export class ReportsService {
         margin: { left: 25, right: 20 }
       });
 
-      currentY = (doc as any).lastAutoTable.finalY + 20;
+      currentY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || currentY + 20;
     }
 
     // Monthly Trends
@@ -765,7 +765,7 @@ export class ReportsService {
 
       autoTable(doc, {
         head: [['Mes', 'Plantadas', 'Cosechadas', 'Eficiencia %']],
-        body: analytics.monthlyTrends.map((trend: any) => [
+        body: (analytics.monthlyTrends as Array<{ month: string; planted: number; harvested: number; efficiency: number }>).map(trend => [
           trend.month,
           trend.planted,
           trend.harvested,
@@ -791,7 +791,7 @@ export class ReportsService {
     }
   }
 
-  private static downloadJSON(data: any, fileName: string): void {
+  private static downloadJSON(data: Record<string, unknown>[] | Record<string, unknown>, fileName: string): void {
     const jsonContent = JSON.stringify(data, null, 2);
     this.triggerDownload(jsonContent, `${fileName}.json`, 'application/json');
   }

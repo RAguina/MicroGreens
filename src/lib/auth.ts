@@ -60,7 +60,7 @@ export const authAPI = {
         user: data.user,
         accessToken: data.accessToken || data.token || ''
       };
-    } catch (error) {
+    } catch {
       return null;
     }
   },
@@ -74,7 +74,7 @@ export const authAPI = {
       }
 
       return refreshResult.user;
-    } catch (error) {
+    } catch {
       return null;
     }
   },
@@ -87,7 +87,7 @@ export const authAPI = {
 
       // Clear CSRF token on logout
       csrfAPI.clearToken();
-    } catch (error) {
+    } catch {
       // Clear CSRF token even on error
       csrfAPI.clearToken();
     }

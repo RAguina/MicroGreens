@@ -402,6 +402,7 @@ export default function SiembrasPage() {
       {/* Plant Variety Modal */}
       {showVarietyModal && (
         <PlantVarietyModal
+          isOpen={showVarietyModal}
           onClose={() => setShowVarietyModal(false)}
         />
       )}

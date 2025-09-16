@@ -36,7 +36,7 @@ export default function AnalyticsPage() {
     try {
       const data = await plantingsAPI.getPlantings();
       setPlantings(data);
-    } catch (err) {
+    } catch {
       // Silent fail for plantings load
     }
   };

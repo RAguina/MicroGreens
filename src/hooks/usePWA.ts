@@ -35,7 +35,7 @@ export function usePWA(): PWAHookResult {
     checkStandalone();
 
     // Listen for beforeinstallprompt event
-    const handleBeforeInstallPrompt = (e: Event) => {
+    const handleBeforeInstallPrompt = (e: Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setCanInstall(true);
@@ -48,7 +48,7 @@ export function usePWA(): PWAHookResult {
       setDeferredPrompt(null);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
     window.addEventListener('appinstalled', handleAppInstalled);
 
     // Register service worker
@@ -63,7 +63,7 @@ export function usePWA(): PWAHookResult {
     }
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
