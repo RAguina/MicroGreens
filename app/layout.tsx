@@ -12,6 +12,28 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: "MicroGreens",
   description: "Sistema de gestión de microverdes",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "MicroGreens",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "MicroGreens",
+    title: "MicroGreens - Gestión de Microverdes",
+    description: "Sistema completo de gestión para cultivos de microverdes",
+  },
+  icons: {
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/icons/apple-touch-icon.png" },
+      { url: "/icons/apple-touch-icon-152x152.png", sizes: "152x152", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({

@@ -5,6 +5,7 @@ import { plantingsAPI, Planting, PlantingStatus } from '@/lib/plantings';
 import CreatePlantingForm from '@/components/siembras/CreatePlantingForm';
 import EditPlantingForm from '@/components/siembras/EditPlantingForm';
 import DeletePlantingConfirm from '@/components/siembras/DeletePlantingConfirm';
+import PlantVarietyModal from '@/components/plantVarieties/PlantVarietyModal';
 
 type ViewMode = 'cards' | 'table';
 
@@ -17,6 +18,7 @@ export default function SiembrasPage() {
   const [editingPlanting, setEditingPlanting] = useState<Planting | null>(null);
   const [deletingPlanting, setDeletingPlanting] = useState<Planting | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [showVarietyModal, setShowVarietyModal] = useState(false);
 
   useEffect(() => {
     loadPlantings();
@@ -340,7 +342,7 @@ export default function SiembrasPage() {
                 📊 Ver calendario de siembras
               </button>
               <button
-                onClick={() => alert('Funcionalidad próximamente disponible')}
+                onClick={() => setShowVarietyModal(true)}
                 className="w-full text-left p-2 rounded hover:bg-gray-50 text-sm"
               >
                 🌱 Registrar nueva variedad
@@ -394,6 +396,13 @@ export default function SiembrasPage() {
             loadPlantings(); // Reload the list
           }}
           onCancel={() => setDeletingPlanting(null)}
+        />
+      )}
+
+      {/* Plant Variety Modal */}
+      {showVarietyModal && (
+        <PlantVarietyModal
+          onClose={() => setShowVarietyModal(false)}
         />
       )}
     </div>

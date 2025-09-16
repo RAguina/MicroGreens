@@ -10,11 +10,14 @@ import ThemeToggle from '@/components/ui/ThemeToggle';
 import NotificationSettings from '@/components/settings/NotificationSettings';
 import EditProfileForm from '@/components/profile/EditProfileForm';
 import BackupSettings from '@/components/settings/BackupSettings';
+import MobileSettings from '@/components/settings/MobileSettings';
+import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 
 export default function ConfiguracionPage() {
   const { user } = useAuth();
   const [showReportModal, setShowReportModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [plantings, setPlantings] = useState<Planting[]>([]);
 
   const handleGenerateReport = async (config: ReportConfig) => {
@@ -126,14 +129,8 @@ export default function ConfiguracionPage() {
                 📊 Exportar datos
               </button>
               <button
-                onClick={() => alert('Funcionalidad próximamente disponible')}
-                className="w-full text-left p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
-              >
-                📱 Configurar móvil
-              </button>
-              <button
-                onClick={() => alert('Funcionalidad próximamente disponible')}
-                className="w-full text-left p-2 rounded hover:bg-gray-50 text-sm text-red-600"
+                onClick={() => setShowDeleteAccount(true)}
+                className="w-full text-left p-2 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-sm text-red-600 dark:text-red-400 transition-colors"
               >
                 🗑️ Eliminar cuenta
               </button>
@@ -145,12 +142,19 @@ export default function ConfiguracionPage() {
             <BackupSettings />
           </div>
 
+          {/* Mobile Settings Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+            <MobileSettings />
+          </div>
+
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <h3 className="text-blue-800 dark:text-blue-200 font-semibold mb-2">💡 Consejos</h3>
             <ul className="text-blue-700 dark:text-blue-300 text-sm space-y-1">
-              <li>• Mantén tus datos actualizados</li>
-              <li>• Activa las notificaciones</li>
+              <li>• Instala la app para una mejor experiencia móvil</li>
+              <li>• Activa las notificaciones para recordatorios importantes</li>
               <li>• Exporta respaldos regularmente</li>
+              <li>• Usa el modo oscuro para ahorrar batería en dispositivos OLED</li>
+              <li>• La app funciona offline una vez instalada</li>
             </ul>
           </div>
         </div>
@@ -168,6 +172,12 @@ export default function ConfiguracionPage() {
       <EditProfileForm
         isOpen={showEditProfile}
         onClose={() => setShowEditProfile(false)}
+      />
+
+      {/* Delete Account Modal */}
+      <DeleteAccountModal
+        isOpen={showDeleteAccount}
+        onClose={() => setShowDeleteAccount(false)}
       />
     </div>
   );
