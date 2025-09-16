@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { PlantVarietyFormData, PlantCategory, DifficultyLevel } from '@/types/plantVarieties';
 import { PlantVarietiesService } from '@/lib/plantVarieties';
 import { useNotify } from '@/contexts/NotificationContext';
@@ -13,6 +14,7 @@ interface PlantVarietyModalProps {
 
 export default function PlantVarietyModal({ isOpen, onClose, onSuccess }: PlantVarietyModalProps) {
   const notify = useNotify();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -94,7 +96,7 @@ export default function PlantVarietyModal({ isOpen, onClose, onSuccess }: PlantV
           action: {
             label: 'Ver Variedades',
             onClick: () => {
-              window.location.href = '/siembras?view=varieties';
+              router.push('/siembras?view=varieties');
             }
           }
         }

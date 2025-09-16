@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Planting, PlantingFormData, plantingsAPI } from '@/lib/plantings';
 import { isoToLocalDateString, normalizeDate } from '@/utils/dateUtils';
 import { useNotify } from '@/contexts/NotificationContext';
@@ -13,6 +14,7 @@ interface EditPlantingFormProps {
 
 export default function EditPlantingForm({ planting, onSuccess, onCancel }: EditPlantingFormProps) {
   const notify = useNotify();
+  const router = useRouter();
   const [formData, setFormData] = useState<PlantingFormData>({
     plantName: planting.plantName || '',
     datePlanted: isoToLocalDateString(planting.datePlanted), // Convert to local date string
@@ -67,7 +69,7 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
             action: {
               label: 'Ver Siembras',
               onClick: () => {
-                window.location.href = '/siembras';
+                router.push('/siembras');
               }
             }
           }

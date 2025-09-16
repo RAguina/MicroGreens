@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotify } from '@/contexts/NotificationContext';
 
@@ -12,6 +13,7 @@ interface DeleteAccountModalProps {
 export default function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps) {
   const { logout } = useAuth();
   const notify = useNotify();
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [confirmText, setConfirmText] = useState('');
@@ -73,7 +75,7 @@ export default function DeleteAccountModal({ isOpen, onClose }: DeleteAccountMod
       // Wait a moment then logout
       setTimeout(async () => {
         await logout();
-        window.location.href = '/login';
+        router.push('/login');
       }, 2000);
 
     } catch (error) {

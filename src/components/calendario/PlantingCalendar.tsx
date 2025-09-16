@@ -162,6 +162,22 @@ export default function PlantingCalendar({ onSelectEvent, onSelectSlot }: Planti
     showMore: (total: number) => `+ Ver ${total} más`
   };
 
+  const formats = {
+    dayFormat: 'dddd, DD MMMM YYYY',
+    dayHeaderFormat: 'dddd, DD MMMM YYYY',
+    dayRangeHeaderFormat: ({ start, end }: { start: Date; end: Date }) => {
+      return `${moment(start).format('DD MMMM')} - ${moment(end).format('DD MMMM YYYY')}`;
+    },
+    agendaHeaderFormat: ({ start, end }: { start: Date; end: Date }) => {
+      return `${moment(start).format('DD MMMM')} - ${moment(end).format('DD MMMM YYYY')}`;
+    },
+    agendaDateFormat: 'dddd, DD MMMM',
+    agendaTimeFormat: 'HH:mm',
+    agendaTimeRangeFormat: ({ start, end }: { start: Date; end: Date }) => {
+      return `${moment(start).format('HH:mm')} - ${moment(end).format('HH:mm')}`;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -222,6 +238,7 @@ export default function PlantingCalendar({ onSelectEvent, onSelectSlot }: Planti
           startAccessor="start"
           endAccessor="end"
           messages={messages}
+          formats={formats}
           eventPropGetter={eventStyleGetter}
           onSelectEvent={onSelectEvent}
           onSelectSlot={onSelectSlot}

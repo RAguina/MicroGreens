@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { PlantingFormData, plantingsAPI } from '@/lib/plantings';
 import { toLocalDateString, getTodayLocalString, normalizeDate } from '@/utils/dateUtils';
 import { useNotify } from '@/contexts/NotificationContext';
@@ -13,6 +14,7 @@ interface CreatePlantingFormProps {
 
 export default function CreatePlantingForm({ onSuccess, onCancel, initialDate }: CreatePlantingFormProps) {
   const notify = useNotify();
+  const router = useRouter();
   const [formData, setFormData] = useState<PlantingFormData>({
     plantName: '',
     datePlanted: initialDate ? toLocalDateString(initialDate) : getTodayLocalString(), // Today's date or selected date
@@ -55,7 +57,7 @@ export default function CreatePlantingForm({ onSuccess, onCancel, initialDate }:
           action: {
             label: 'Ver Siembras',
             onClick: () => {
-              window.location.href = '/siembras';
+              router.push('/siembras');
             }
           }
         }

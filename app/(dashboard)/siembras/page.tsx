@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { plantingsAPI, Planting, PlantingStatus } from '@/lib/plantings';
 import CreatePlantingForm from '@/components/siembras/CreatePlantingForm';
 import EditPlantingForm from '@/components/siembras/EditPlantingForm';
@@ -14,6 +15,7 @@ type ViewMode = 'cards' | 'table';
 
 export default function SiembrasPage() {
   // Future: import { useAuth } from '@/contexts/AuthContext'; for user filtering
+  const router = useRouter();
   const [plantings, setPlantings] = useState<Planting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -349,7 +351,7 @@ export default function SiembrasPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
             <div className="space-y-2">
               <button
-                onClick={() => window.location.href = '/calendario'}
+                onClick={() => router.push('/calendario')}
                 className="w-full text-left p-2 rounded hover:bg-gray-50 text-sm"
               >
                 📊 Ver calendario de siembras

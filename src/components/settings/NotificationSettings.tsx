@@ -1,10 +1,12 @@
 'use client';
 
 import { useNotifications, useNotify } from '@/contexts/NotificationContext';
+import { useRouter } from 'next/navigation';
 
 export default function NotificationSettings() {
   const { settings, updateSettings } = useNotifications();
   const notify = useNotify();
+  const router = useRouter();
 
   const handleToggle = (key: keyof typeof settings, value: boolean) => {
     updateSettings({ [key]: value });
@@ -33,7 +35,7 @@ export default function NotificationSettings() {
         action: {
           label: 'Ver Siembras',
           onClick: () => {
-            window.location.href = '/siembras';
+            router.push('/siembras');
           }
         }
       }
