@@ -114,7 +114,7 @@ export default function CreatePlantingForm({ onSuccess, onCancel, initialDate }:
     }
   };
 
-  const handleChange = (field: keyof PlantingFormData, value: string | number) => {
+  const handleChange = (field: keyof PlantingFormData, value: string | number | undefined) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
