@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { plantingsAPI, Planting, PlantingStatus } from '@/lib/plantings';
 import CreatePlantingForm from '@/components/siembras/CreatePlantingForm';
 import EditPlantingForm from '@/components/siembras/EditPlantingForm';
@@ -16,6 +16,7 @@ type ViewMode = 'cards' | 'table';
 export default function SiembrasPage() {
   // Future: import { useAuth } from '@/contexts/AuthContext'; for user filtering
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [plantings, setPlantings] = useState<Planting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +35,16 @@ export default function SiembrasPage() {
       setViewMode(savedViewMode);
     }
   }, []);
+
+  useEffect(() => {
+    // Check if we should show varieties view
+    const view = searchParams.get('view');
+    if (view === 'varieties') {
+      setShowVarietyModal(true);
+      // Clean the URL parameter
+      router.replace('/siembras');
+    }
+  }, [searchParams, router]);
 
   const loadPlantings = async () => {
     try {
@@ -205,14 +216,39 @@ export default function SiembrasPage() {
                               {planting.trayNumber || 'No asignada'}
                             </div>
                             <div>
-                              <span className="font-medium">Cantidad:</span>
+                              <span className="font-medium">Densidad:</span>
                               <br />
-                              {planting.quantity || 'No especificada'}
+                              {planting.quantity ? `${planting.quantity}g` : 'No especificada'}
                             </div>
                           </div>
                           {planting.notes && (
                             <div className="mt-2 text-sm text-gray-600">
                               <span className="font-medium">Notas:</span> {planting.notes}
+                            </div>
+                          )}
+                          {(planting.substrate || planting.irrigationMl || planting.soakingHours) && (
+                            <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-gray-600">
+                              {planting.substrate && (
+                                <div>
+                                  <span className="font-medium">Sustrato:</span>
+                                  <br />
+                                  {planting.substrate}
+                                </div>
+                              )}
+                              {planting.irrigationMl && (
+                                <div>
+                                  <span className="font-medium">Riego:</span>
+                                  <br />
+                                  {planting.irrigationMl} ML
+                                </div>
+                              )}
+                              {planting.soakingHours && (
+                                <div>
+                                  <span className="font-medium">Remojo:</span>
+                                  <br />
+                                  {planting.soakingHours} hrs
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -255,7 +291,7 @@ export default function SiembrasPage() {
                           Bandeja
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Cantidad
+                          Densidad
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Acciones
@@ -290,7 +326,7 @@ export default function SiembrasPage() {
                             {planting.trayNumber || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {planting.quantity || '-'}
+                            {planting.quantity ? `${planting.quantity}g` : '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex space-x-2">

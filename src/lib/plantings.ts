@@ -25,6 +25,11 @@ export interface Planting {
   status: PlantingStatus;
   trayNumber?: string;
 
+  // New optional fields
+  substrate?: string;
+  irrigationMl?: number;
+  soakingHours?: number;
+
   // Relations
   harvests?: unknown[];
   _count?: {
@@ -43,6 +48,11 @@ export interface PlantingFormData {
   status?: PlantingStatus;
   trayNumber?: string;
   notes?: string;
+
+  // New optional fields
+  substrate?: string;
+  irrigationMl?: number;
+  soakingHours?: number;
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://micro-greens-backend.vercel.app';

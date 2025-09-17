@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Planting, PlantingFormData, plantingsAPI } from '@/lib/plantings';
 import { isoToLocalDateString, normalizeDate } from '@/utils/dateUtils';
 import { useNotify } from '@/contexts/NotificationContext';
+import { getSubstrateHistory, saveSubstrate } from '@/utils/substrateUtils';
 
 interface EditPlantingFormProps {
   planting: Planting;
@@ -24,11 +25,40 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
     quantity: planting.quantity || undefined,
     status: planting.status,
     trayNumber: planting.trayNumber || '',
-    notes: planting.notes || ''
+    notes: planting.notes || '',
+    substrate: planting.substrate || '',
+    irrigationMl: planting.irrigationMl || undefined,
+    soakingHours: planting.soakingHours || undefined
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [substrateHistory, setSubstrateHistory] = useState<string[]>([]);
+  const [showSubstrateDropdown, setShowSubstrateDropdown] = useState(false);
+
+  useEffect(() => {
+    // Load substrate history
+    const history = getSubstrateHistory();
+    setSubstrateHistory(history);
+  }, []);
+
+  useEffect(() => {
+    // Close substrate dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.substrate-dropdown')) {
+        setShowSubstrateDropdown(false);
+      }
+    };
+
+    if (showSubstrateDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSubstrateDropdown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +66,11 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
     setError(null);
 
     try {
+      // Save substrate to history if provided
+      if (formData.substrate?.trim()) {
+        saveSubstrate(formData.substrate.trim());
+      }
+
       // Clean up form data - remove empty strings and normalize dates
       const cleanData: Partial<PlantingFormData> = {
         ...formData,
@@ -46,6 +81,9 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
         quantity: formData.quantity || undefined,
         trayNumber: formData.trayNumber || undefined,
         notes: formData.notes || undefined,
+        substrate: formData.substrate?.trim() || undefined,
+        irrigationMl: formData.irrigationMl || undefined,
+        soakingHours: formData.soakingHours || undefined,
       };
 
       await plantingsAPI.updatePlanting(planting.id, cleanData);
@@ -97,6 +135,11 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleSubstrateChange = (value: string) => {
+    setFormData(prev => ({ ...prev, substrate: value }));
+    setShowSubstrateDropdown(false);
   };
 
   return (
@@ -195,12 +238,12 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
             {/* Quantity */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cantidad (gramos/semillas)
+                Densidad (gramos)
               </label>
               <input
                 type="number"
                 value={formData.quantity || ''}
-                onChange={(e) => handleChange('quantity', e.target.value ? parseInt(e.target.value) : '')}
+                onChange={(e) => handleChange('quantity', e.target.value ? parseInt(e.target.value) : undefined)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="0"
                 min="0"
@@ -251,6 +294,75 @@ export default function EditPlantingForm({ planting, onSuccess, onCancel }: Edit
               rows={3}
               placeholder="Observaciones, condiciones especiales, etc."
             />
+          </div>
+
+          {/* New Fields Section */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Características Adicionales (Opcional)</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Substrate */}
+              <div className="relative substrate-dropdown">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sustrato
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.substrate || ''}
+                    onChange={(e) => handleChange('substrate', e.target.value)}
+                    onFocus={() => setShowSubstrateDropdown(true)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="ej. Zeolita, Turba + Perlita, Compost"
+                  />
+                  {showSubstrateDropdown && substrateHistory.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                      {substrateHistory.map((substrate, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => handleSubstrateChange(substrate)}
+                          className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                        >
+                          {substrate}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Irrigation ML */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Riego (ML)
+                </label>
+                <input
+                  type="number"
+                  value={formData.irrigationMl || ''}
+                  onChange={(e) => handleChange('irrigationMl', e.target.value ? parseInt(e.target.value) : undefined)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+
+              {/* Soaking Hours */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Remojo (horas)
+                </label>
+                <input
+                  type="number"
+                  value={formData.soakingHours || ''}
+                  onChange={(e) => handleChange('soakingHours', e.target.value ? parseInt(e.target.value) : undefined)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="0"
+                  min="0"
+                  step="0.5"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Form Actions */}
